@@ -8,7 +8,7 @@ import networkx as nx
 import random
 #%% 
 # Set the number of vertices
-N = sys.argv[1]
+N = int(sys.argv[1])
 # N=16
 
 #%% 
@@ -49,6 +49,8 @@ matrices64 = ["chessboard-64",
               "skew-64-0.8",
               "skew-64-0.9",
               "skew-64-1.0",]
+degrees = [16, 14, 12, 10, 8, 6, 4]
+matrices=matrices16
 if N==16:
     matrices=matrices16
     degrees = [16, 14, 12, 10, 8, 6, 4]
