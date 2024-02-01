@@ -81,8 +81,10 @@ for degree in degrees:
             for i in range(N):
                 for j in range(N):
                     if i != j:
-                        if networkType == "demand-aware" or networkType == "demand-aware-periodic":
+                        if networkType == "demand-aware":
                             capacity[(i, j)] = model.addVar(vtype=GRB.INTEGER, name=f'capacity_{i}_{j}', lb=0, ub=maxValue)  # Set lb=0 for capacity
+                        if networkType == "demand-aware-periodic":
+                            capacity[(i, j)] = model.addVar(vtype=GRB.INTEGER, name=f'capacity_{i}_{j}', lb=0, ub=(N/degree)*maxValue)  # Set lb=0 for capacity
                         elif networkType == "oblivious-periodic":
                             capacity[(i,j)] = 1
             
