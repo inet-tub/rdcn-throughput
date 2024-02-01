@@ -31,7 +31,7 @@ matrices16 = [
             "skew-16-0.8",
             "skew-16-0.9",
             "skew-16-1.0",
-            "data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3","topoopt",]
+            "data-parallelism","hybrid-parallelism","heatmap2","heatmap3"]
 
 matrices64 = ["chessboard-64",
               "uniform-64",
@@ -57,7 +57,14 @@ else:
 
 #%%
 print("mygrep,matrix,networkType,degree,throughput")
-for degree in [2, 4, 6, 8, 12, 14, 16]:
+degrees = [2, 4, 6, 8, 12, 14, 16]
+split=int(sys.argv[1]) # temporary
+if split==1:
+    degrees = [2, 4, 6]
+elif split==2:
+    degrees = [8, 12, 14, 16]
+
+for degree in degrees:
     for matrixfile in matrices:
         for networkType in ["oblivious-periodic","demand-aware","demand-aware-periodic"]:
             demand = np.loadtxt(workdir+matrixfile+".mat", usecols=range(N))
