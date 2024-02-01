@@ -57,7 +57,6 @@ else:
 
 #%%
 for degree in [2, 4, 6, 8, 12, 14, 16]:
-    throughputFile = open(workdir+"throughput-"+str(degree)+".csv", "w")
     for matrixfile in matrices:
         for networkType in ["oblivious-periodic","demand-aware","demand-aware-periodic"]:
             demand = np.loadtxt(workdir+matrixfile+".mat", usecols=range(N))
@@ -160,11 +159,9 @@ for degree in [2, 4, 6, 8, 12, 14, 16]:
             
             # Check the optimization status
             if model.status == GRB.OPTIMAL:
-                throughputFile.write(str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+f"{model.objVal}")
-                throughputFile.write("\n")
+                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+f"{model.objVal}")
             else:
-                throughputFile.write(str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+"NULL")
-                throughputFile.write("\n")
+                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+"NULL")
             
             # # Print capacity values (commented out)
             # '''
