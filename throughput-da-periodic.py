@@ -169,9 +169,9 @@ for degree in degrees:
         
         # Check the optimization status
         if model.status == GRB.OPTIMAL:
-            print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("demand-aware-static")+str(",")+str(degree)+str(",")+str(finalIteration))
+            print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("demand-aware-periodic")+str(",")+str(degree)+str(",")+str(finalIteration))
         else:
-            print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("demand-aware-static")+str(",")+str(degree)+str(",")+"NULL")
+            print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("demand-aware-periodic")+str(",")+str(degree)+str(",")+"NULL")
         
         # # Print capacity values (commented out)
         # '''
