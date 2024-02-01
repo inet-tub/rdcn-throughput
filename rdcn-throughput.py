@@ -159,9 +159,9 @@ for degree in [2, 4, 6, 8, 12, 14, 16]:
             
             # Check the optimization status
             if model.status == GRB.OPTIMAL:
-                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+f"{model.objVal}")
+                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+f"{model.objVal}")
             else:
-                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+"NULL")
+                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+"NULL")
             
             # # Print capacity values (commented out)
             # '''
