@@ -75,7 +75,7 @@ for degree in degrees:
         print(matrixfile, "demand-aware-static")
         print("################")
 
-        finalIteration = 0.5
+        finalIteration = 0.1
         for iteration in iterations:
             print("################")
             print(iteration)
