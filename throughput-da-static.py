@@ -95,9 +95,9 @@ for degree in degrees:
             outDegree = [0]*N
             inDegree = [0]*N
             for row in range(N):
-                outDegree[row] = int(np.min(degree,N-1) - np.sum(demandFloor[row]))
+                outDegree[row] = int(np.min([degree,N-1]) - np.sum(demandFloor[row]))
             for column in range(N):
-                inDegree[column] = int(np.min(degree,N-1) - np.sum(demandFloor[:,column]))
+                inDegree[column] = int(np.min([degree,N-1]) - np.sum(demandFloor[:,column]))
 
             minimumDegree = np.min([N-1, np.min([outDegree,inDegree])])
             if minimumDegree>=1:
