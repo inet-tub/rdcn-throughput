@@ -16,7 +16,7 @@ degree=4
 #%%
 # List of matrices
 workdir="/home/vamsi/src/phd/codebase/rdcn-throughput/matrices/"
-matrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3","topoopt",
+matrices16 = [
             "chessboard-16",
             "uniform-16",
             "permutation-16",
@@ -30,7 +30,8 @@ matrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","hea
             "skew-16-0.7",
             "skew-16-0.8",
             "skew-16-0.9",
-            "skew-16-1.0",]
+            "skew-16-1.0",
+            "data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3","topoopt",]
 
 matrices64 = ["chessboard-64",
               "uniform-64",
