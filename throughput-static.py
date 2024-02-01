@@ -74,7 +74,7 @@ for degree in degrees:
         print("################")
 
 
-        Gstatic = nx.random_regular_graph(np.min(N-1,degree), N)
+        Gstatic = nx.random_regular_graph(np.min([N-1,degree]), N)
 
 
         # Create a new Gurobi model
@@ -150,7 +150,7 @@ for degree in degrees:
         if model.status == GRB.OPTIMAL:
             print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("static")+str(",")+str(degree)+str(",")+f"{model.objVal}")
         else:
-            print("mygrep"+str(",")+str(N)+str(",")str(matrixfile)+str(",")+str(maxValue)+str(",")+str("static")+str(",")+str(degree)+str(",")+"NULL")
+            print("mygrep"+str(",")+str(N)+str(",")+str(matrixfile)+str(",")+str(maxValue)+str(",")+str("static")+str(",")+str(degree)+str(",")+"NULL")
         
         # # Print capacity values (commented out)
         # '''
