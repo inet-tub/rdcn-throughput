@@ -60,9 +60,9 @@ print("mygrep,matrix,maxValue,networkType,degree,throughput")
 degrees = [16, 14, 12, 10, 8, 6, 4]
 split=int(sys.argv[1]) # temporary
 if split==1:
-    degrees = [2, 4, 6]
+    degrees = [4, 6, 8]
 elif split==2:
-    degrees = [8, 12, 14, 16]
+    degrees = [12, 14, 16]
 
 for degree in degrees:
     for matrixfile in matrices:
