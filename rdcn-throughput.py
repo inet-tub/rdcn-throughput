@@ -56,8 +56,8 @@ else:
     exit
 
 #%%
-print("mygrep,matrix,networkType,degree,throughput")
-degrees = [2, 4, 6, 8, 12, 14, 16]
+print("mygrep,matrix,maxValue,networkType,degree,throughput")
+degrees = [16, 14, 12, 10, 8, 6, 4]
 split=int(sys.argv[1]) # temporary
 if split==1:
     degrees = [2, 4, 6]
@@ -69,6 +69,7 @@ for degree in degrees:
         for networkType in ["oblivious-periodic","demand-aware","demand-aware-periodic"]:
             demand = np.loadtxt(workdir+matrixfile+".mat", usecols=range(N))
             demand=demand*degree # The original matrix is normalized. We scale the matrix to for the specified degree
+            maxValue = np.ceil(np.max(demand))
             print("################")
             print(matrixfile, networkType)
             print("################")
@@ -81,7 +82,7 @@ for degree in degrees:
                 for j in range(N):
                     if i != j:
                         if networkType == "demand-aware" or networkType == "demand-aware-periodic":
-                            capacity[(i, j)] = model.addVar(vtype=GRB.INTEGER, name=f'capacity_{i}_{j}', lb=0)  # Set lb=0 for capacity
+                            capacity[(i, j)] = model.addVar(vtype=GRB.INTEGER, name=f'capacity_{i}_{j}', lb=0, ub=maxValue)  # Set lb=0 for capacity
                         elif networkType == "oblivious-periodic":
                             capacity[(i,j)] = 1
             
@@ -98,7 +99,7 @@ for degree in degrees:
                                     flow_variables[(i, j)][(s, d)] = model.addVar(vtype=GRB.CONTINUOUS, name=f'flow_{i}_{j}_{s}_{d}', lb=0)
             
             # Create a variable for throughput with lower bound 0
-            throughput = model.addVar(vtype=GRB.CONTINUOUS, name='throughput', lb=0)
+            throughput = model.addVar(vtype=GRB.CONTINUOUS, name='throughput', lb=0, ub=1)
             
             # Update the model to include these variables
             model.update()
@@ -144,9 +145,9 @@ for degree in degrees:
                 for s in range(N):
                     # Define the demand-aware outgoing links constraint
                     if networkType == "demand-aware":
-                        outgoing_links_constraint_expr = gp.quicksum(capacity[(s, i)] for i in range(N) if i != s) == degree
+                        outgoing_links_constraint_expr = gp.quicksum(capacity[(s, i)] for i in range(N) if i != s) - degree <= 0
                     elif networkType == "demand-aware-periodic":
-                        outgoing_links_constraint_expr = gp.quicksum((degree/N)*capacity[(s, i)] for i in range(N) if i != s) == degree
+                        outgoing_links_constraint_expr = gp.quicksum((degree/N)*capacity[(s, i)] for i in range(N) if i != s) - degree <= 0
                     model.addConstr(outgoing_links_constraint_expr, f'outgoing_links_constraint_{s}')
             
             # Implement the demand-aware incoming links constraints for all d in N
@@ -154,9 +155,9 @@ for degree in degrees:
                 for d in range(N):
                     # Define the demand-aware incoming links constraint
                     if networkType == "demand-aware":
-                        incoming_links_constraint_expr = gp.quicksum(capacity[(i, d)] for i in range(N) if i != d) == degree
+                        incoming_links_constraint_expr = gp.quicksum(capacity[(i, d)] for i in range(N) if i != d) - degree <= 0
                     elif networkType == "demand-aware-periodic":
-                        incoming_links_constraint_expr = gp.quicksum((degree/N)*capacity[(i, d)] for i in range(N) if i != d) == degree
+                        incoming_links_constraint_expr = gp.quicksum((degree/N)*capacity[(i, d)] for i in range(N) if i != d) - degree <= 0
                     model.addConstr(incoming_links_constraint_expr, f'incoming_links_constraint_{d}')
             
             # Set the objective to maximize throughput
@@ -167,9 +168,9 @@ for degree in degrees:
             
             # Check the optimization status
             if model.status == GRB.OPTIMAL:
-                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+f"{model.objVal}")
+                print("mygrep",str(matrixfile)+str(",")+str(maxValue)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+f"{model.objVal}")
             else:
-                print("mygrep",str(matrixfile)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+"NULL")
+                print("mygrep",str(matrixfile)+str(",")+str(maxValue)+str(",")+str(networkType)+str(",")+str(degree)+str(",")+"NULL")
             
             # # Print capacity values (commented out)
             # '''
