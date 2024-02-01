@@ -56,6 +56,7 @@ else:
     exit
 
 #%%
+print("mygrep,matrix,networkType,degree,throughput")
 for degree in [2, 4, 6, 8, 12, 14, 16]:
     for matrixfile in matrices:
         for networkType in ["oblivious-periodic","demand-aware","demand-aware-periodic"]:
