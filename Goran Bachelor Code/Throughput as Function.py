@@ -1,10 +1,11 @@
+#In this file I play around with static topologies and functions which determine the throughput they achieve
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-def theta(G, M, N, d):
+def theta(G, M, N, d):#Path formulation of throughput given static topology G (currently unreliable)
     capacity = {}
     for i in range(N):
         for j in range(N):

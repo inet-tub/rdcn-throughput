@@ -1,3 +1,4 @@
+#This file contains a first rough draft of the Rounding heuristic
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
