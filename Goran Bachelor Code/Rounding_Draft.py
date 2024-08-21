@@ -1,0 +1,69 @@
+#This file contains a first rough draft of the Rounding heuristic
+import gurobipy as gp
+from gurobipy import GRB
+import networkx as nx
+import numpy as np
+import Throughput_as_Function as fct
+
+def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d
+    model = gp.Model()
+    entry_vars = {}
+    #Every entry in demand matrix has integer var that is either floor or ceiling
+    for i in range(N):
+        for j in range(N):
+            if i !=j:
+                entry_vars[i,j] = model.addVar(vtype=GRB.INTEGER,name=f"entry_{i}_{j}", lb=np.floor(M[i,j]), ub= np.ceil(M[i,j]))
+
+    #Add row and col constraints
+    for i in range(N):
+        model.addConstr(gp.quicksum(entry_vars[i,j] for j in range(N) if j !=i) == d)
+        model.addConstr(gp.quicksum(entry_vars[j,i] for j in range(N) if j != i) == d)
+
+    model.update()
+    const = model.addVar(vtype=GRB.INTEGER, ub=0) 
+    model.setObjective(const, GRB.MAXIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
+    
+    # Optimize the model
+    model.optimize()
+    #Create Rounded Matrix from gurobi variable values and return reference to that matrix
+    sol = np.zeros((N,N))
+    for i in range(N):
+        for j in range(N):
+            if i !=j:
+                sol[i,j] = entry_vars[i,j].X
+    return sol
+def createResidual(M, rounded): #Modifies demand matrix M such that it becomes the residual matrix
+    for i in range(N):
+        for j in range(N):
+            if i !=j:
+                M[i,j] = np.max((M[i,j]-rounded[i,j], 0))
+
+N= 16
+dE = 8
+workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+demandMatrix = demandMatrix * dE
+
+iterations=[1-i*0.01 for i in range(99)]
+finalIteration = 0.1
+
+for iteration in iterations:
+    print("################")
+    print(iteration)
+    print("################")
+    demand = demandMatrix*iteration #scale down M (demandMatrix) by factor theta (iteration)
+    print(np.array2string(demand))
+    print("___________________________-")
+    dBulk = np.floor(dE*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
+    dRes = dE - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
+    intMatrix = rounding(demand, N, dBulk)
+    createResidual(demand, intMatrix)  #
+    print(np.array2string(demand))
+    print(dRes)
+    G = nx.random_regular_graph(dRes, N)
+    # (_,res, _) = fct.findBestRRG(demand, N, dE-dIter,6)
+    if fct.thetaEdgeFormulation(G, demand, N)== 1:
+        finalIteration = iteration
+        print(finalIteration)
+        print("+++++++++++++++++")
+        break

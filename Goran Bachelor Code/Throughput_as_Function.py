@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-def theta(G, M, N, d):#Path formulation of throughput given static topology G (currently unreliable)
+def theta(G, M, N):#Path formulation of throughput given static topology G (currently unreliable)
     capacity = {}
     for i in range(N):
         for j in range(N):
@@ -44,7 +44,7 @@ def theta(G, M, N, d):#Path formulation of throughput given static topology G (c
     # print("________________________________________________________________")
 
 
-def thetaEdgeFormulation(G, M, N, d):#Given static topology G and demand matrix M, returns best throughput achievable
+def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
     for i in range(N):
@@ -108,7 +108,7 @@ def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given 
     best_G = None
     for i in range(iter):
         G_temp = nx.random_regular_graph(d,N)
-        theta = thetaEdgeFormulation(G_temp, M, N, d)
+        theta = thetaEdgeFormulation(G_temp, M, N)
         # nx.draw_circular(G_temp, with_labels= True)
         # plt.show()
         if(theta > best_theta):
@@ -120,20 +120,20 @@ def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given 
     
 
 N=16
-d=8
+dE=8
 
-G = nx.random_regular_graph(d,N)
+G = nx.random_regular_graph(dE,N)
 
 
 G2= nx.MultiDiGraph() #d-Strong Circle
 for i in range(N):
     j = (i+1) % N
-    for k in range(d): 
+    for k in range(dE): 
         keys = G2.add_edge(i,j)
 
 G3 = nx.MultiDiGraph() #Pseudo-Chord network
 for i in range(N):
-    for k in range(d):
+    for k in range(dE):
         j = (i+ 2**k)%N
         if(i == j): #Loop edges don't help us, so we add them somewhere else
             j = (j+1) % N
@@ -141,7 +141,7 @@ for i in range(N):
 
 workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
 demand = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
-demand = demand *d
+demand = demand *dE
 # demand = np.zeros((N,N))
 # for i in range(N):
 #     for j in range(N):
@@ -150,9 +150,9 @@ demand = demand *d
 
 # theta(G, demand, N, d)
 
-# thetaEdgeFormulation(G, demand, N, d)
+# thetaEdgeFormulation(G, demand, N)
 
-(iter, thetavar, BG ) = findBestRRG(demand, N, d, 10)
+(iter, thetavar, BG ) = findBestRRG(demand, N, dE, 10)
 print(iter)
 print(thetavar)
 
@@ -167,11 +167,11 @@ print(thetavar)
 #     j = (i+1) % N
 #     for k in range(d):
 #         keys = G2.add_edge(i,j)
-# thetaEdgeFormulation(G2, demand, N, d)
+# thetaEdgeFormulation(G2, demand, N)
 # nx.draw_circular(G2, with_labels= True)
 # plt.show()
 # # theta(G3, demand, N, d)
-# thetaEdgeFormulation(G3, demand, N, d)
+# thetaEdgeFormulation(G3, demand, N)
 # nx.draw_circular(G3, with_labels= True)
 # plt.show()
 
