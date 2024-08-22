@@ -115,6 +115,8 @@ def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given 
             best_iter = i
             best_G = G_temp
             best_theta = theta
+            if(theta == 1):
+                return(best_iter, best_theta, best_G) # We'll never get better than 1 as throughput, so avoid calculation of next iterations
     return(best_iter, best_theta, best_G)
 
     
