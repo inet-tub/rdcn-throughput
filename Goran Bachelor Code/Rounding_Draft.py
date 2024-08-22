@@ -38,32 +38,30 @@ def createResidual(M, rounded): #Modifies demand matrix M such that it becomes t
             if i !=j:
                 M[i,j] = np.max((M[i,j]-rounded[i,j], 0))
 
+def thetaByRounding(N, d, M):#Returns throughput that can be achieved for given N, d and M with rounding heuristic
+    iterations=[1-i*0.01 for i in range(99)]
+    for iteration in iterations:
+        print("################")
+        print(iteration)
+        print("################")
+        demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
+        print(np.array2string(demand))
+        print("___________________________-")
+        dBulk = np.floor(d*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
+        dRes = d - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
+        createResidual(demand, rounding(demand, N, dBulk))  #
+        print(np.array2string(demand))
+        print(dRes)
+        G = nx.random_regular_graph(dRes, N)
+        # (_,res, _) = fct.findBestRRG(demand, N, dE-dIter,6)
+        if fct.thetaEdgeFormulation(G, demand, N)== 1:
+            return iteration
+    return 0
+
 N= 16
 dE = 8
 workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
 demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
 demandMatrix = demandMatrix * dE
+print(str(thetaByRounding(N, dE, demandMatrix)))
 
-iterations=[1-i*0.01 for i in range(99)]
-finalIteration = 0.1
-
-for iteration in iterations:
-    print("################")
-    print(iteration)
-    print("################")
-    demand = demandMatrix*iteration #scale down M (demandMatrix) by factor theta (iteration)
-    print(np.array2string(demand))
-    print("___________________________-")
-    dBulk = np.floor(dE*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
-    dRes = dE - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
-    intMatrix = rounding(demand, N, dBulk)
-    createResidual(demand, intMatrix)  #
-    print(np.array2string(demand))
-    print(dRes)
-    G = nx.random_regular_graph(dRes, N)
-    # (_,res, _) = fct.findBestRRG(demand, N, dE-dIter,6)
-    if fct.thetaEdgeFormulation(G, demand, N)== 1:
-        finalIteration = iteration
-        print(finalIteration)
-        print("+++++++++++++++++")
-        break
