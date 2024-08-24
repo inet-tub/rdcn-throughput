@@ -47,6 +47,7 @@ def theta(G, M, N):#Path formulation of throughput given static topology G (curr
 def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
+    model.Params.LogToConsole = 0
     for i in range(N):
         for j in range(N):
                 capacity[(i,j)] = G.number_of_edges(i,j)
@@ -118,62 +119,65 @@ def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given 
             if(theta == 1):
                 return(best_iter, best_theta, best_G) # We'll never get better than 1 as throughput, so avoid calculation of next iterations
     return(best_iter, best_theta, best_G)
-
+def createCircleGraph(N, d):
+    CircleG= nx.MultiDiGraph()#d-Strong Circle
+    for i in range(N):
+        j = (i+1) % N
+        for k in range(d): 
+            keys = CircleG.add_edge(i,j)
+    return CircleG
+def createPseudoChord(N,d):
+    ChordG = nx.MultiDiGraph() #Pseudo-Chord network
+    for i in range(N):
+        for k in range(d):
+            j = (i+ 2**k)%N
+            if(i == j): #Loop edges don't help us, so we add them somewhere else
+                j = (j+1) % N
+            key = ChordG.add_edge(i,j)
+    return ChordG
+if __name__ == "__main__":
     
+    N=16
+    dE=8
 
-N=16
-dE=8
-
-G = nx.random_regular_graph(dE,N)
-
-
-G2= nx.MultiDiGraph() #d-Strong Circle
-for i in range(N):
-    j = (i+1) % N
-    for k in range(dE): 
-        keys = G2.add_edge(i,j)
-
-G3 = nx.MultiDiGraph() #Pseudo-Chord network
-for i in range(N):
-    for k in range(dE):
-        j = (i+ 2**k)%N
-        if(i == j): #Loop edges don't help us, so we add them somewhere else
-            j = (j+1) % N
-        key = G3.add_edge(i,j)
-
-workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-demand = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
-demand = demand *dE
-# demand = np.zeros((N,N))
-# for i in range(N):
-#     for j in range(N):
-#         if i!=j:
-#             demand[i][j] = d/(N-1)
-
-# theta(G, demand, N, d)
-
-# thetaEdgeFormulation(G, demand, N)
-
-(iter, thetavar, BG ) = findBestRRG(demand, N, dE, 10)
-print(iter)
-print(thetavar)
+    G = nx.random_regular_graph(dE,N)
 
 
-# nx.draw_circular(G, with_labels= True)
-# plt.show()
 
 
-# theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
-# G2.add_nodes_from(range(N))
-# for i in range(N):
-#     j = (i+1) % N
-#     for k in range(d):
-#         keys = G2.add_edge(i,j)
-# thetaEdgeFormulation(G2, demand, N)
-# nx.draw_circular(G2, with_labels= True)
-# plt.show()
-# # theta(G3, demand, N, d)
-# thetaEdgeFormulation(G3, demand, N)
-# nx.draw_circular(G3, with_labels= True)
-# plt.show()
+    workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    demand = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+    demand = demand *dE
+    # demand = np.zeros((N,N))
+    # for i in range(N):
+    #     for j in range(N):
+    #         if i!=j:
+    #             demand[i][j] = d/(N-1)
+
+    # theta(G, demand, N, d)
+
+    # thetaEdgeFormulation(G, demand, N)
+
+    (iter, thetavar, BG ) = findBestRRG(demand, N, dE, 10)
+    print(iter)
+    print(thetavar)
+
+
+    # nx.draw_circular(G, with_labels= True)
+    # plt.show()
+
+
+    # theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
+    # G2.add_nodes_from(range(N))
+    # for i in range(N):
+    #     j = (i+1) % N
+    #     for k in range(d):
+    #         keys = G2.add_edge(i,j)
+    # thetaEdgeFormulation(G2, demand, N)
+    # nx.draw_circular(G2, with_labels= True)
+    # plt.show()
+    # # theta(G3, demand, N, d)
+    # thetaEdgeFormulation(G3, demand, N)
+    # nx.draw_circular(G3, with_labels= True)
+    # plt.show()
 

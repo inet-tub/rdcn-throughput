@@ -34,11 +34,11 @@ def thetaByFloor(N, d, M, RRGiter):#Returns throughput that can be achieved for 
         if res== 1:
             return iteration
     return 0
-
-N= 16
-dE = 8
-workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
-demandMatrix = demandMatrix * dE
-print(str(thetaByFloor(N, dE, demandMatrix, 6)))
+if __name__ == "__main__":
+    N= 16
+    dE = 8
+    workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+    demandMatrix = demandMatrix * dE
+    print(str(thetaByFloor(N, dE, demandMatrix, 6)))
 
