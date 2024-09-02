@@ -27,10 +27,10 @@ def logEveryRRGres(M, N, d, iter):
 
 def evaluateRRGLog(log):
     arr = np.array(log)
-    variance = np.var(arr)
+    std = np.std(arr)
     best_index = np.argmax(arr)
     worst_index = np.argmin(arr)
-    return (" | Variance: " +  str(variance) +", Worst result: " + str(arr[worst_index]) + ", Best result: "  + str(arr[best_index])+ " achieved in iteration "+ str(best_index))
+    return (" | SD: " +  str(std) +", Worst result: " + str(arr[worst_index]) + ", Best result: "  + str(arr[best_index])+ " achieved in iteration "+ str(best_index))
 
 def PlotLogProgression(logs, labels):
     # Set up the plot
@@ -83,10 +83,9 @@ if __name__ == "__main__":
     for matrix in matrices16:
         demandMatrix = np.loadtxt(workdir+matrix+".mat", usecols=range(N))
         demand = demandMatrix *dE
-        log = logEveryRRGres(demand, N, dE, iter=100)
+        log = logEveryRRGres(demand, N, dE, iter=10)
         logs.append(log)
         evals.append(matrix + evaluateRRGLog(log))
-        # matrix_progress.append(findBestRRGwithLog(demand, N, dE, iter=100))  #Takes ~1h even for N=16 if you set iter to 100 on my laptop
     PlotLogProgression(logs, matrices16)
     for eval in evals:
         print(eval)

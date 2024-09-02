@@ -71,8 +71,9 @@ outputfile = open(workdir+matrixname+".mat", "w")
 demand = np.zeros((N, N))
 for i in range(N):
     for j in range(N):
-        demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
-        outputfile.write(str(demand[i,j]/N)+" ")
+        if i!=j:
+            demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
+            outputfile.write(str(demand[i,j]/(N-1))+" ")
     outputfile.write("\n")
 outputfile.close()
 
@@ -82,8 +83,9 @@ outputfile = open(workdir+matrixname+".mat", "w")
 demand = np.zeros((N, N))
 for i in range(N):
     for j in range(N):
-        demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
-        outputfile.write(str(demand[i,j]/N)+" ")
+        if i!=j:
+            demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
+            outputfile.write(str(demand[i,j]/(N-1))+" ")
     outputfile.write("\n")
 outputfile.close()
 #####################################################################################

@@ -8,6 +8,8 @@ import Throughput_as_Function as fct
 def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d
     model = gp.Model()
     entry_vars = {}
+    print(np.array2string(M))
+    print(d)
     #Every entry in demand matrix has integer var that is either floor or ceiling
     for i in range(N):
         for j in range(N):
@@ -20,8 +22,11 @@ def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such th
         model.addConstr(gp.quicksum(entry_vars[j,i] for j in range(N) if j != i) == d)
 
     model.update()
-    const = model.addVar(vtype=GRB.INTEGER, ub=0) 
-    model.setObjective(const, GRB.MAXIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
+    const = model.addVar(vtype=GRB.INTEGER, ub=0)
+    diff = model.addVar(vtype=GRB.CONTINUOUS) 
+    # model.addConstr(gp.quicksum((entry_vars[i,j] - M[i,j]) for i in range(N) for j in range(N) if j != i)== diff)
+    #Justification for objective function, which is useful in this case?
+    model.setObjective(const, GRB.MINIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
     
     # Optimize the model
     model.optimize()
@@ -31,6 +36,7 @@ def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such th
         for j in range(N):
             if i !=j:
                 sol[i,j] = entry_vars[i,j].X
+    print(np.array2string(sol))
     return sol
 def createResidual(M, rounded): #Modifies demand matrix M such that it becomes the residual matrix
     for i in range(N):
@@ -57,7 +63,7 @@ if __name__ == "__main__":
     N= 16
     dE = 8
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+    demandMatrix = np.loadtxt(workdir+"skew-16-0.4.mat", usecols=range(N))
     demandMatrix = demandMatrix * dE
-    print(str(thetaByRounding(N, dE, demandMatrix, 6)))
+    print(str(thetaByRounding(N, dE, demandMatrix, 1)))
 
