@@ -5,6 +5,53 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+
+def createResidual(M, integer): #Modifies demand matrix M such that it becomes the residual matrix
+    N = M.shape[0]
+    for i in range(N):
+        for j in range(N):
+            if i !=j:
+                M[i,j] = M[i,j]-round(integer[i,j]) #No np.max with 0, we can use negative value to determine how much capacity direct edge btwn i and j has left in rounding heuristic
+
+import random
+
+def match_and_decrement(list_a, list_b, M):
+    # Ensure both lists are of equal length
+    assert len(list_a) == len(list_b), "Lists must be of equal length"
+    
+    # Ensure both lists have equal sums
+    assert sum(list_a) == sum(list_b), "Lists must have equal sums"
+    
+    N = len(list_a)
+    
+    # Continue until all entries in list_a are zero
+    while any(val > 0 for val in list_a):
+        # Randomly choose an index with a value > 0 from list_a
+        a_index = random.choice([i for i in range(N) if list_a[i] > 0])
+        
+        # Randomly choose a different index with a value > 0 from list_b
+
+        valid_b_indices = [i for i in range(N) if list_b[i] > 0 and i != a_index]
+        if not valid_b_indices:
+            print("No valid index left in list_b to decrement with")
+            break
+        b_index = random.choice(valid_b_indices)
+        # Decrement both values at the selected indices
+        list_a[a_index] -= 1
+        list_b[b_index] -= 1
+        
+        M[a_index, b_index] -=1
+        # Print for debugging purposes (optional)
+        print(f"Decrementing A[{a_index}] and B[{b_index}]")
+        print(f"List A: {list_a}")
+        print(f"List B: {list_b}\n")
+    
+    print("All entries in List A have been decremented to 0.")
+
+
+
+
 def theta(G, M, N):#Path formulation of throughput given static topology G (currently unreliable)
     capacity = {}
     for i in range(N):
@@ -44,20 +91,29 @@ def theta(G, M, N):#Path formulation of throughput given static topology G (curr
     # print("________________________________________________________________")
 
 
-def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, returns best throughput achievable
+def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
-    # model.Params.LogToConsole = 0
-    # model.Params.OptimalityTol = 1e-4
-
-    for i in range(N):
-        for j in range(N):
-                capacity[(i,j)] = G.number_of_edges(i,j)
+    model.Params.LogToConsole = 1
+    # model.Params.OptimalityTol = 1e-9
+    # model.Params.FeasibilityTol = 1e-9
+    # model.Params.IntFeasTol = 1e-9
+    if input_graph:
+        for i in range(N):
+            for j in range(N):
+                    capacity[(i,j)] = G.number_of_edges(i,j) 
+                    if(M[i,j]< 0): #In case of rounding, negative demand tells us how much capacity is left on that edge
+                        capacity[(i, j)]-= M[i,j]
+    else:
+        for i in range(N):
+            for j in range(N):
+                if i !=j:
+                    capacity[(i, j)] = G[i,j]
     flow_variables = {}
     for i in range(N):
         for j in range(N):
             if i != j and capacity[(i, j)] > 0:
-                flow_variables[(i, j)] = {} #TODO: Remove flow variables where there is no edge, in general remove all variables that are unused
+                flow_variables[(i, j)] = {} 
                 #Also if there is no demand between a pair we also don't need flow variables
                 for s in range(N):
                     for d in range(N):
@@ -66,7 +122,7 @@ def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, 
                             flow_variables[(i, j)][(s, d)] = model.addVar(vtype=GRB.CONTINUOUS, name=f'flow_{i}_{j}_{s}_{d}', lb=0)
     throughput = model.addVar(vtype=GRB.CONTINUOUS, name='throughput', lb=0, ub=1)
     model.update()
-                # Implement the source demand constraints for all s in N and all d in N
+    # Implement the source demand constraints for all s in N and all d in N
     for s in range(N):
         for d in range(N):
             if s != d and M[s,d] > 0:
@@ -83,14 +139,16 @@ def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, 
                 model.addConstr(dest_demand_constraint_expr, f'dest_demand_constraint_{s}_{d}')
     
     # Implement the flow conservation constraints for all j in N (excluding s and d), s in N, and d in N
-    for j in range(N):
-        for s in range(N):
-            for d in range(N):
-                if j != s and j != d and s != d and M[s,d] > 0 :  # Ensuring s, j, and d are all different
-                    # Define the flow conservation constraint
-                    flow_conservation_constraint_expr = gp.quicksum(flow_variables[(i, j)][(s, d)] for i in range(N) if i != j and capacity[(i, j)] > 0) - gp.quicksum(flow_variables[(j, k)][(s, d)] for k in range(N) if k != j and capacity[(j, k)] > 0) == 0
-                    model.addConstr(flow_conservation_constraint_expr, f'flow_conservation_constraint_{j}_{s}_{d}')
-    
+     #Change order of loops
+    for s in range(N):
+        for d in range(N):
+            if s != d and M[s,d] > 0:
+                for j in range(N):
+                    if j != s and j != d:  # Ensuring s, j, and d are all different
+                        # Define the flow conservation constraint
+                        flow_conservation_constraint_expr = gp.quicksum(flow_variables[(i, j)][(s, d)] for i in range(N) if i != j and capacity[(i, j)] > 0) - gp.quicksum(flow_variables[(j, k)][(s, d)] for k in range(N) if k != j and capacity[(j, k)] > 0) == 0
+                        model.addConstr(flow_conservation_constraint_expr, f'flow_conservation_constraint_{j}_{s}_{d}')
+
     # Implement the capacity constraints for every i in N, for every j in N
     for i in range(N):
         for j in range(N):
@@ -103,7 +161,6 @@ def thetaEdgeFormulation(G, M, N):#Given static topology G and demand matrix M, 
     
     # Optimize the model
     model.optimize()
-    # print("_______________________________________________________")
     return throughput.X
 
 def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
@@ -149,7 +206,7 @@ if __name__ == "__main__":
 
 
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demand = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+    demand = np.loadtxt(workdir+"hybrid-parallelism.mat", usecols=range(N))
     demand = demand *dE
     # demand = np.zeros((N,N))
     # for i in range(N):
@@ -161,14 +218,20 @@ if __name__ == "__main__":
 
     # thetaEdgeFormulation(G, demand, N)
 
-    (iter, thetavar, BG ) = findBestRRG(demand, N, dE, 10)
-    print(iter)
-    print(thetavar)
+ 
+    # print(thetaEdgeFormulation(createPseudoChord(N, dE), demand, N))
+    # print(thetaEdgeFormulation(createCircleGraph(N, dE), demand, N))
 
 
-    # nx.draw_circular(G, with_labels= True)
-    # plt.show()
 
+    degOut = [2, 2, 2, 2, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 4]
+    degIn = [2, 3, 3, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 4]
+    graph = nx.directed_configuration_model(degIn, degOut)
+    # graph = nx.random_regular_expander_graph(N, dE, max_tries= 10000 )
+
+    nx.draw_circular(graph, with_labels= True)
+    plt.show()
+    match_and_decrement(degOut, degIn)
 
     # theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
     # G2.add_nodes_from(range(N))
