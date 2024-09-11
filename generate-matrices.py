@@ -64,37 +64,22 @@ def rgb_to_hex(rgb):
 #     outputfile.close()
 
 #####################################################################################
-######### Chessboard ########  
-N = 16
-matrixname="chessboard-16"
-outputfile = open(workdir+matrixname+".mat", "w")
-demand = np.zeros((N, N))
-for i in range(N):
-    for j in range(N):
-        if i!=j:
-            demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
-            outputfile.write(str(demand[i,j]/(N-1))+" ")
-        else:
-            outputfile.write("0.0 ")
-    outputfile.write("\n")
-outputfile.close()
+ 
+for N in [8,16,32,64]:
+    ######### Chessboard ######## 
+    matrixname="chessboard-" + str(N)
+    outputfile = open(workdir+matrixname+".mat", "w")
+    demand = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            if i!=j:
+                demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
+                outputfile.write(str(demand[i,j]/(N-1))+" ")
+            else:
+                outputfile.write("0.0 ")
+        outputfile.write("\n")
+    outputfile.close()
 
-N = 64
-matrixname="chessboard-64"
-outputfile = open(workdir+matrixname+".mat", "w")
-demand = np.zeros((N, N))
-for i in range(N):
-    for j in range(N):
-        if i!=j:
-            demand[i, j] = 0.5 if (i + j) % 2 == 0 else 1.5
-            outputfile.write(str(demand[i,j]/(N-1))+" ")
-        else:
-            outputfile.write("0.0 ")
-    outputfile.write("\n")
-outputfile.close()
-#####################################################################################
-N = 16
-for N in [16,32,64]:
     ######### Uniform ######## 
     outputfile = open(workdir+"uniform-"+str(N)+".mat", "w")
     uniformdemand = np.zeros((N, N))
