@@ -6,6 +6,77 @@ import Throughput_as_Function as fct
 import Rounding_Draft as rd
 import Floor_Draft as fd
 import matplotlib.pyplot as plt
+workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+matrices16 = [
+            "chessboard-16",
+            "uniform-16",
+            "permutation-16",
+            "skew-16-0.1",
+            "skew-16-0.2",
+            "skew-16-0.3",
+            "skew-16-0.4",
+            "skew-16-0.5",
+            "skew-16-0.6",
+            "skew-16-0.7",
+            "skew-16-0.8",
+            "skew-16-0.9",
+            "data-parallelism","hybrid-parallelism","heatmap2","heatmap3", "topoopt"]
+matrices32 = [
+    "chessboard-32",
+    "uniform-32",
+    "permutation-32",
+    "skew-32-0.1",
+    "skew-32-0.2",
+    "skew-32-0.3",
+    "skew-32-0.4",
+    "skew-32-0.5",
+    "skew-32-0.6",
+    "skew-32-0.7",
+    "skew-32-0.8",
+    "skew-32-0.9",
+]
+matrices64 = [
+    "chessboard-64",
+    "uniform-64",
+    "permutation-64",
+    "skew-64-0.1",
+    "skew-64-0.2",
+    "skew-64-0.3",
+    "skew-64-0.4",
+    "skew-64-0.5",
+    "skew-64-0.6",
+    "skew-64-0.7",
+    "skew-64-0.8",
+    "skew-64-0.9",
+]
+matrices128 = [
+    "chessboard-128",
+    "uniform-128",
+    "permutation-128",
+    "skew-128-0.1",
+    "skew-128-0.2",
+    "skew-128-0.3",
+    "skew-128-0.4",
+    "skew-128-0.5",
+    "skew-128-0.6",
+    "skew-128-0.7",
+    "skew-128-0.8",
+    "skew-128-0.9",
+]
+matrices256 = [
+    "chessboard-256",
+    "uniform-256",
+    "permutation-256",
+    "skew-256-0.1",
+    "skew-256-0.2",
+    "skew-256-0.3",
+    "skew-256-0.4",
+    "skew-256-0.5",
+    "skew-256-0.6",
+    "skew-256-0.7",
+    "skew-256-0.8",
+    "skew-256-0.9",
+]
 def trim_floats(val, tolerance=1e-9):
     if abs(val - round(val)) < tolerance:
         return round(val)
@@ -61,7 +132,6 @@ def generalized_rounding(M, N, d):#Given M, N and d returns rounded numpy matrix
     col_sums = {}
     row_sum_vars = {}
     col_sum_vars = {}
-    print(np.array2string(M))
     #Every entry in demand matrix has integer var that is either floor or ceiling
     for i in range(N):
         for j in range(N):
@@ -72,8 +142,7 @@ def generalized_rounding(M, N, d):#Given M, N and d returns rounded numpy matrix
         col_sums[i] = trim_floats(np.sum(M[:,i]))
         row_sum_vars[i] = model.addVar(vtype=GRB.INTEGER,name=f"row_sum_{i}", lb=np.floor(row_sums[i]), ub = np.ceil(row_sums[i]))
         col_sum_vars[i] =  model.addVar(vtype=GRB.INTEGER,name=f"col_sum_{i}", lb=np.floor(col_sums[i]), ub = np.ceil(col_sums[i]))
-    print(row_sums)
-    print(col_sums)
+
     #Add row and col constraints
     for i in range(N):
         model.addConstr(gp.quicksum(entry_vars[i,j] for j in range(N) if j !=i) == row_sum_vars[i]) # Row Sum
@@ -91,7 +160,7 @@ def generalized_rounding(M, N, d):#Given M, N and d returns rounded numpy matrix
         for j in range(N):
             if i !=j:
                 sol[i,j] = entry_vars[i,j].X
-    print(np.array2string(sol))
+    # print(np.array2string(sol)) #Debug rounding solution print statement
     return sol
 def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scalar which is the biggest row or col sum; Afterwards every row/col sum leq 1 
     max_row_sum = M.sum(axis=1).max()
@@ -115,19 +184,18 @@ def vermillion_throughput(saturated_demand, d, k, N, MH = True):
     G = nx.directed_configuration_model(in_Left, out_Left) #TODO: Re-Check GCM in normal Floor heuristic: Need to use list; not dict!
     # nx.draw_circular(G, with_labels= True)
     # plt.show()
-    for i in range(N):
-        print("Node " + str(i) + " has the following edges:")
-        for j in range(N):
-            if i !=j and G.number_of_edges(i,j) != 0:
-                print("To " + str(j) +" : "  + str(G.number_of_edges(i,j)))
-    #Do we really NEED to construct another complete graph now?
+    # for i in range(N): #Debug print statements
+    #     print("Node " + str(i) + " has the following edges:")
+    #     for j in range(N):
+    #         if i !=j and G.number_of_edges(i,j) != 0:
+    #             print("To " + str(j) +" : "  + str(G.number_of_edges(i,j)))
     total_edge_cap = np.zeros((N,N))
     for i in range(N):
         for j in range(N):
             if i !=j:
                 total_edge_cap[i,j] = rounded_matrix[i,j] + G.number_of_edges(i,j) +1
     total_edge_cap = total_edge_cap *(d /(k*N))
-    print(np.array2string(total_edge_cap))
+    # print(np.array2string(total_edge_cap)) #Debug capacity print statement
     
     thetaSH = thetaSingleHop(total_edge_cap, saturated_demand, N, input_graph=False)
     if(MH):
@@ -142,77 +210,6 @@ def rotornet_throughput(saturated_demand, d ,N):
     return (fct.thetaEdgeFormulation(total_edge_cap, saturated_demand,N, False), thetaSingleHop(total_edge_cap, saturated_demand,N, False))
 
 if __name__ == "__main__":
-    workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    matrices16 = [
-                "chessboard-16",
-                "uniform-16",
-                "permutation-16",
-                "skew-16-0.1",
-                "skew-16-0.2",
-                "skew-16-0.3",
-                "skew-16-0.4",
-                "skew-16-0.5",
-                "skew-16-0.6",
-                "skew-16-0.7",
-                "skew-16-0.8",
-                "skew-16-0.9",
-                "data-parallelism","hybrid-parallelism","heatmap2","heatmap3", "topoopt"]
-    matrices32 = [
-        "chessboard-32",
-        "uniform-32",
-        "permutation-32",
-        "skew-32-0.1",
-        "skew-32-0.2",
-        "skew-32-0.3",
-        "skew-32-0.4",
-        "skew-32-0.5",
-        "skew-32-0.6",
-        "skew-32-0.7",
-        "skew-32-0.8",
-        "skew-32-0.9",
-    ]
-    matrices64 = [
-        "chessboard-64",
-        "uniform-64",
-        "permutation-64",
-        "skew-64-0.1",
-        "skew-64-0.2",
-        "skew-64-0.3",
-        "skew-64-0.4",
-        "skew-64-0.5",
-        "skew-64-0.6",
-        "skew-64-0.7",
-        "skew-64-0.8",
-        "skew-64-0.9",
-    ]
-    matrices128 = [
-        "chessboard-128",
-        "uniform-128",
-        "permutation-128",
-        "skew-128-0.1",
-        "skew-128-0.2",
-        "skew-128-0.3",
-        "skew-128-0.4",
-        "skew-128-0.5",
-        "skew-128-0.6",
-        "skew-128-0.7",
-        "skew-128-0.8",
-        "skew-128-0.9",
-    ]
-    matrices256 = [
-        "chessboard-256",
-        "uniform-256",
-        "permutation-256",
-        "skew-256-0.1",
-        "skew-256-0.2",
-        "skew-256-0.3",
-        "skew-256-0.4",
-        "skew-256-0.5",
-        "skew-256-0.6",
-        "skew-256-0.7",
-        "skew-256-0.8",
-        "skew-256-0.9",
-    ]
     N = 256
     dE = 128
     k_s = [2,3,4,5]
@@ -236,12 +233,11 @@ if __name__ == "__main__":
         Vermillion_res.append(k_results)
     # print("Results for each matrix using filtered Demand and Vermillion with k = " + str(k)) 
     # print("Results for each matrix using RotorNet and filtering") 
-    for i in range(len(matrices32)):
+    for i in range(len(matrices256)):
         result_string = ""
         result_string +=matrices256[i]
         for j in range(len(k_s)):
             result_string +="  |k=" +str(k_s[j])  + "  Verm SH: " +  str(Vermillion_res[i][j])
-        # str +=
         print(result_string)
         
     # print(np.array2string(normalized_demand))
