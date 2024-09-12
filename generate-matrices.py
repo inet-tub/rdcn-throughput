@@ -65,7 +65,7 @@ def rgb_to_hex(rgb):
 
 #####################################################################################
  
-for N in [8,16,32,64]:
+for N in [8,16,32,64, 128, 256]:
     ######### Chessboard ######## 
     matrixname="chessboard-" + str(N)
     outputfile = open(workdir+matrixname+".mat", "w")

@@ -99,7 +99,7 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     max_sum = max(max_row_sum, max_col_sum)
     M = np.divide(M, max_sum)
     return M # call-by-reference doesn't work for some reason, hence returning M
-def vermillion_throughput(saturated_demand, d, k, N):
+def vermillion_throughput(saturated_demand, d, k, N, MH = True):
     normalized_demand = return_normalized_matrix(saturated_demand)
     deg = ((k-1)*N)
     scaled_demand = normalized_demand * deg
@@ -129,9 +129,11 @@ def vermillion_throughput(saturated_demand, d, k, N):
     total_edge_cap = total_edge_cap *(d /(k*N))
     print(np.array2string(total_edge_cap))
     
-    theta = fct.thetaEdgeFormulation(total_edge_cap,saturated_demand, N, input_graph=False )
     thetaSH = thetaSingleHop(total_edge_cap, saturated_demand, N, input_graph=False)
-    return (theta, thetaSH)
+    if(MH):
+        return (fct.thetaEdgeFormulation(total_edge_cap,saturated_demand, N, input_graph=False ), thetaSH)
+    else:
+        return thetaSH
 def rotornet_throughput(saturated_demand, d ,N):
     total_edge_cap = np.zeros((N,N))
     for i in range(N):
@@ -155,12 +157,68 @@ if __name__ == "__main__":
                 "skew-16-0.8",
                 "skew-16-0.9",
                 "data-parallelism","hybrid-parallelism","heatmap2","heatmap3", "topoopt"]
-    N = 16
-    dE = 8
-    k = 2
+    matrices32 = [
+        "chessboard-32",
+        "uniform-32",
+        "permutation-32",
+        "skew-32-0.1",
+        "skew-32-0.2",
+        "skew-32-0.3",
+        "skew-32-0.4",
+        "skew-32-0.5",
+        "skew-32-0.6",
+        "skew-32-0.7",
+        "skew-32-0.8",
+        "skew-32-0.9",
+    ]
+    matrices64 = [
+        "chessboard-64",
+        "uniform-64",
+        "permutation-64",
+        "skew-64-0.1",
+        "skew-64-0.2",
+        "skew-64-0.3",
+        "skew-64-0.4",
+        "skew-64-0.5",
+        "skew-64-0.6",
+        "skew-64-0.7",
+        "skew-64-0.8",
+        "skew-64-0.9",
+    ]
+    matrices128 = [
+        "chessboard-128",
+        "uniform-128",
+        "permutation-128",
+        "skew-128-0.1",
+        "skew-128-0.2",
+        "skew-128-0.3",
+        "skew-128-0.4",
+        "skew-128-0.5",
+        "skew-128-0.6",
+        "skew-128-0.7",
+        "skew-128-0.8",
+        "skew-128-0.9",
+    ]
+    matrices256 = [
+        "chessboard-256",
+        "uniform-256",
+        "permutation-256",
+        "skew-256-0.1",
+        "skew-256-0.2",
+        "skew-256-0.3",
+        "skew-256-0.4",
+        "skew-256-0.5",
+        "skew-256-0.6",
+        "skew-256-0.7",
+        "skew-256-0.8",
+        "skew-256-0.9",
+    ]
+    N = 256
+    dE = 128
+    k_s = [2,3,4,5]
     rotornet_res = []
     Vermillion_res = []
-    for matrix in matrices16:
+    for matrix in matrices256:
         loaded_demand = np.loadtxt(workdir+matrix + ".mat", usecols=range(N))
         # print(np.array2string(loaded_demand))
         eps = 1e-5
@@ -171,12 +229,20 @@ if __name__ == "__main__":
         filtered_demand = loaded_demand
         saturated_demand = filtered_demand * dE
         print(np.array2string(saturated_demand))
-        rotornet_res.append(rotornet_throughput(saturated_demand,dE, N))
-        Vermillion_res.append(vermillion_throughput(saturated_demand, dE, k, N))
+        # rotornet_res.append(rotornet_throughput(saturated_demand,dE, N))
+        k_results = []
+        for i in range(len(k_s)):
+            k_results.append(vermillion_throughput(saturated_demand, dE, k_s[i], N, MH = False))
+        Vermillion_res.append(k_results)
     # print("Results for each matrix using filtered Demand and Vermillion with k = " + str(k)) 
     # print("Results for each matrix using RotorNet and filtering") 
-    for i in range(len(matrices16)):
-        print(matrices16[i]  + ":  " + "  Rotor MH: " + str(rotornet_res[i][0])  + "  Rotor SH: " + str(rotornet_res[i][1])+ "  Verm MH: " + str(Vermillion_res[i][0]) + "  Verm SH: " +  str(Vermillion_res[i][1]))
+    for i in range(len(matrices32)):
+        result_string = ""
+        result_string +=matrices256[i]
+        for j in range(len(k_s)):
+            result_string +="  |k=" +str(k_s[j])  + "  Verm SH: " +  str(Vermillion_res[i][j])
+        # str +=
+        print(result_string)
         
     # print(np.array2string(normalized_demand))
     # print(normalized_demand.sum(axis=0).max())  #Max Column Sum  
