@@ -39,8 +39,9 @@ def thetaByFloor(N, d, M, RRGiter):#Returns throughput that can be achieved for 
         #     G = nx.random_regular_graph(dRes,N)
         fct.createResidual(demand, demandFloor)  
 
-
+        print(np.array2string(demand))
         fct.match_and_decrement(outLeft, inLeft, demand)
+        print(np.array2string(demand))
         (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGiter)
         # res = fct.thetaEdgeFormulation(G, demand, N)
         if res== 1:

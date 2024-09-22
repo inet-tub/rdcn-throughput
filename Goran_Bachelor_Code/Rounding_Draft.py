@@ -23,10 +23,10 @@ def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such th
 
     model.update()
     const = model.addVar(vtype=GRB.INTEGER, ub=0)
-    # diff = model.addVar(vtype=GRB.CONTINUOUS, lb=-1e10 ,ub=1e10) 
-    # model.addConstr(gp.quicksum(((entry_vars[i,j] - M[i,j])*entry_vars[i,j]) for i in range(N) for j in range(N) if j != i)== diff)
+    diff = model.addVar(vtype=GRB.CONTINUOUS, lb=-1e10 ,ub=1e10) 
+    model.addConstr(gp.quicksum(((entry_vars[i,j] - M[i,j])*entry_vars[i,j]) for i in range(N) for j in range(N) if j != i)== diff)
     #Justification for objective function, which is useful in this case?
-    model.setObjective(const, GRB.MAXIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
+    model.setObjective(diff, GRB.MINIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
     
     # Optimize the model
     model.optimize()
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     N= 16
     dE = 8
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(workdir+"heatmap2.mat", usecols=range(N))
+    demandMatrix = np.loadtxt(workdir+"chessboard-16.mat", usecols=range(N))
     demandMatrix = demandMatrix * dE
     print(str(thetaByRounding(N, dE, demandMatrix, 1)))
 

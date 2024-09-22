@@ -15,7 +15,16 @@ def createResidual(M, integer): #Modifies demand matrix M such that it becomes t
                 M[i,j] = M[i,j]-round(integer[i,j]) #No np.max with 0, we can use negative value to determine how much capacity direct edge btwn i and j has left in rounding heuristic
 
 import random
-
+def filtering(M):
+    eps = 1e-5
+    # print("_________________________________________________")
+    M[M < eps] = 0
+def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scalar which is the biggest row or col sum; Afterwards every row/col sum leq 1 
+    max_row_sum = M.sum(axis=1).max()
+    max_col_sum = M.sum(axis=0).max()
+    max_sum = max(max_row_sum, max_col_sum)
+    M = np.divide(M, max_sum)
+    return M
 def match_and_decrement(list_a, list_b, M):
     # Ensure both lists are of equal length
     assert len(list_a) == len(list_b), "Lists must be of equal length"
@@ -94,7 +103,7 @@ def theta(G, M, N):#Path formulation of throughput given static topology G (curr
 def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
-    model.Params.LogToConsole = 1
+    model.Params.LogToConsole = 0
     # model.Params.OptimalityTol = 1e-9
     # model.Params.FeasibilityTol = 1e-9
     # model.Params.IntFeasTol = 1e-9
