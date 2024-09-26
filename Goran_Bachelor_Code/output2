@@ -1,0 +1,8 @@
+N matrix d Alg RRGIter throughput
+8 chessboard-8 2 RRG 6 0.45454545454545453
+8 chessboard-8 2 Floor 6 0.42999999999999994
+8 chessboard-8 2 Rounding 6 0.44999999999999996
+8 chessboard-8 2 Circle NA 0.2499999999999999
+8 chessboard-8 2 Chord NA 0.375
+8 chessboard-8 3 RRG 6 0.5844155844155845
+8 chessboard-8 3 Floor 6 0.6

@@ -5,6 +5,7 @@ import matplotlib
 import seaborn as sns
 from matplotlib.colors import LogNorm
 import matplotlib.colors as colors
+from Goran_Bachelor_Code import random_Matrices as RM
 
 directory = "/home/vamsi/src/phd/writings/rdcn-throughput/master/plots/"
 workdir="./matrices/"
@@ -80,7 +81,7 @@ for N in [8,16,32,64, 128, 256]:
         outputfile.write("\n")
     outputfile.close()
 
-    ######### Uniform ######## 
+#     ######### Uniform ######## 
     outputfile = open(workdir+"uniform-"+str(N)+".mat", "w")
     uniformdemand = np.zeros((N, N))
     for i in range(N):
@@ -121,3 +122,18 @@ for N in [8,16,32,64, 128, 256]:
             outputfile.write("\n")
         outputfile.close()
 #####################################################################################
+#Random Matrices
+
+# N = 64
+# matrixname="random-skewed-" + str(N)
+# outputfile = open(workdir+matrixname+".mat", "w")
+# demand = RM.generate_doubly_stochastic_matrix(N, min_val=1e-5)
+# print(np.array2string(demand,formatter={'float_kind':lambda x: "%.4f" % x}))
+# for i in range(N):
+#     for j in range(N):
+#         if i!=j:
+#             outputfile.write(str(demand[i,j])+" ")
+#         else:
+#             outputfile.write("0.0 ")
+#     outputfile.write("\n")
+# outputfile.close()

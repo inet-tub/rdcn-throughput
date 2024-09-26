@@ -13,7 +13,7 @@ def generate_synthmatrix_names(N):
     "chessboard-",
     "uniform-",
     "permutation-",
-    "random-skew-"
+    "random-skewed-",
     "skew-",
     "skew-",
     "skew-",
@@ -23,12 +23,10 @@ def generate_synthmatrix_names(N):
     "skew-",
     "skew-",
     "skew-",
-    "skew-"
     ]
     for i in range(4):
         res[i] += str(N)
     for j in range(9):
-        print(j+4)
         res[j+4] += str(N) + "-0." + str(j+1)
     return res
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap2","heatmap3", "topoopt"]
@@ -37,16 +35,72 @@ organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap2","heatmap
 
 
 if __name__ == "__main__":
-    workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    n_values_used = [16]
-    matrices16 = generate_synthmatrix_names(16) + organicmatrices16
-    print(matrices16)
-    N = 16
-    dE = 14
-    # floorResults =  []
-    # roundingResults = []
-    randomRes = []
-    expanderRes =[]
+    matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    outputdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
+    n_values_used = [8,16]
+    d_s = [2,3,4,5,6,7]
+    RRG_Iter = 6
+    outputfile = open(outputdir+"output2", "w")
+    outputfile.write("N matrix d Alg RRGIter throughput\n")
+    print("N matrix d Alg RRGIter throughput")
+    
+
+    for N in n_values_used:
+        matrices = generate_synthmatrix_names(N)
+        if(N == 16):
+            matrices+=organicmatrices16
+        for matrix in matrices:
+            demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
+            fct.filtering(demandMatrix)
+            demandMatrix = fct.return_normalized_matrix(demandMatrix)
+            for d in d_s:
+                d = round(d*(N/8))
+                saturatedM = demandMatrix * d
+
+
+                
+
+
+                string_Beginning = str(N) +" "+ matrix +" " + str(d)
+
+
+                (_,RRG_theta,_) =  fct.findBestRRG(saturatedM, N, d, RRG_Iter)
+                RRG_string = string_Beginning + " RRG "+ str(RRG_Iter) + " " +str(RRG_theta)
+                print(RRG_string)
+                outputfile.write(RRG_string+"\n")
+
+                Floor_theta = fd.thetaByFloor(N,d,saturatedM, RRG_Iter)
+                Floor_String = string_Beginning + " Floor " + str(RRG_Iter) +" " + str(Floor_theta)
+                print(Floor_String)
+                outputfile.write( Floor_String+"\n")
+
+                Rounding_theta = rd.alternativeTheta(N, d, saturatedM, RRG_Iter)
+                Rounding_String =string_Beginning +  " Rounding " + str(RRG_Iter) +" " + str(Rounding_theta)
+                print(Rounding_String)
+                outputfile.write( Rounding_String+"\n")
+
+                circle_theta = fct.thetaEdgeFormulation(fct.createCircleGraph(N,d),saturatedM, N)
+                circleString = string_Beginning + " Circle " +"NA" + " " +str(circle_theta)
+                print(circleString)
+                outputfile.write( circleString+"\n")
+
+                chord_theta = fct.thetaEdgeFormulation(fct.createPseudoChord(N,d), saturatedM, N)
+                chordString = string_Beginning + " Chord " +"NA" + " " +str(chord_theta)
+                print(chordString)
+                outputfile.write( chordString+"\n")
+
+
+
+
+
+
+
+
+            
+    # # floorResults =  []
+    # # roundingResults = []
+    # randomRes = []
+    # expanderRes =[]
     # CircleRes = []
     # ChordRes = []
     # ExpanderRes = []

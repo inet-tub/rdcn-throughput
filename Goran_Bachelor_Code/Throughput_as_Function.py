@@ -15,8 +15,7 @@ def createResidual(M, integer): #Modifies demand matrix M such that it becomes t
                 M[i,j] = M[i,j]-round(integer[i,j]) #No np.max with 0, we can use negative value to determine how much capacity direct edge btwn i and j has left in rounding heuristic
 
 import random
-def filtering(M):
-    eps = 1e-5
+def filtering(M, eps=1e-5):
     # print("_________________________________________________")
     M[M < eps] = 0
 def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scalar which is the biggest row or col sum; Afterwards every row/col sum leq 1 
@@ -43,7 +42,7 @@ def match_and_decrement(list_a, list_b, M):
 
         valid_b_indices = [i for i in range(N) if list_b[i] > 0 and i != a_index]
         if not valid_b_indices:
-            print("No valid index left in list_b to decrement with")
+            # print("No valid index left in list_b to decrement with")
             break
         b_index = random.choice(valid_b_indices)
         # Decrement both values at the selected indices
@@ -52,52 +51,12 @@ def match_and_decrement(list_a, list_b, M):
         
         M[a_index, b_index] -=1
         # Print for debugging purposes (optional)
-        print(f"Decrementing A[{a_index}] and B[{b_index}]")
-        print(f"List A: {list_a}")
-        print(f"List B: {list_b}\n")
+    #     print(f"Decrementing A[{a_index}] and B[{b_index}]")
+    #     print(f"List A: {list_a}")
+    #     print(f"List B: {list_b}\n")
     
-    print("All entries in List A have been decremented to 0.")
+    # print("All entries in List A have been decremented to 0.")
 
-
-
-
-def theta(G, M, N):#Path formulation of throughput given static topology G (currently unreliable)
-    capacity = {}
-    for i in range(N):
-        for j in range(N):
-                capacity[(i,j)] = G.number_of_edges(i,j)
-
-    all_paths = {}
-    for u in G.nodes():
-        for v in G.nodes():
-            if u!=v: #If is fix by Vamsi(not from slides)
-                all_paths[u,v] = [list(zip(path,path[1:])) for path in nx.all_simple_paths(G, source=u,target=v)]
-
-    model = gp.Model("throughput")
-
-    flow_vars = {}
-    for(s, d), paths in all_paths.items():
-        for p in range(len(paths)):
-            flow_vars[s, d, p] = model.addVar(vtype= GRB.CONTINUOUS, name=f"flow_{s}_{d}_{p}",lb=0)
-
-    throughput = model.addVar(vtype=GRB.CONTINUOUS,name='troughput',lb=0,ub=1)
-
-    for u,v in G.edges():
-        model.addConstr(gp.quicksum(flow_vars[i,j,p] for (i,j), paths in all_paths.items() for p in range(len(paths)) if (u,v) in paths[p]) <= capacity[(u,v)],name =f"cap_{u}_{v}")
-
-    for u in G.nodes():
-        for v in G.nodes():
-            if u != v:
-                model.addConstr( gp.quicksum(flow_vars[u,v,p] for p in range(len(all_paths[u,v]))) >= throughput*M[u][v],name=f"M_{u}_{v}"  )
-
-    model.setObjective(throughput, GRB.MAXIMIZE)
-    model.optimize()
-
-    # print("Throughput for the given topology and the given demand matrix is:", throughput.X)
-    # for v in model.getVars():
-    #     if v.x != 0:
-    #             print(v.varName, "=", v.x)
-    # print("________________________________________________________________")
 
 
 def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
@@ -172,7 +131,7 @@ def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G a
     model.optimize()
     return throughput.X
 
-def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
+def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
     best_iter = -1
     best_theta = 0
     best_G = None
@@ -181,12 +140,16 @@ def findBestRRG(M, N, d, iter): #Given denand Matrix M, test out RRGs for given 
         theta = thetaEdgeFormulation(G_temp, M, N)
         # nx.draw_circular(G_temp, with_labels= True)
         # plt.show()
+        if cutoff:
+            if theta < 0.8:
+                return(None, 0, None)
         if(theta > best_theta):
             best_iter = i
             best_G = G_temp
             best_theta = theta
             if(theta == 1):
                 return(best_iter, best_theta, best_G) # We'll never get better than 1 as throughput, so avoid calculation of next iterations
+        
     return(best_iter, best_theta, best_G)
 def createCircleGraph(N, d):
     CircleG= nx.MultiDiGraph()#d-Strong Circle
