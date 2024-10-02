@@ -6,6 +6,7 @@ import random_Matrices as rM
 import Throughput_as_Function as fct
 import Floor_Draft as fd
 import Rounding_Draft as rd
+import EVariable as ev
 import sys
 
 def generate_synthmatrix_names(N):
@@ -29,16 +30,35 @@ def generate_synthmatrix_names(N):
     for j in range(9):
         res[j+4] += str(N) + "-0." + str(j+1)
     return res
-organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap2","heatmap3", "topoopt"]
+organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
+matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+outputdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
+n_values_used = [8,16]
+d_s = [2,3,4,5,6,7]
 
-    
+def writePerfectTheta():
+    outputfile = open(outputdir+"output3", "w")
+    outputfile.write("N matrix d Alg NA throughput\n")
+    print("N matrix d Alg NA throughput")
+    for N in n_values_used:
+        matrices = generate_synthmatrix_names(N)
+        if(N == 16):
+            matrices+=organicmatrices16
+        for matrix in matrices:
+            demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
+            fct.filtering(demandMatrix)
+            demandMatrix = fct.return_normalized_matrix(demandMatrix)
+            for d in d_s:
+                d = round(d*(N/8))
+                saturatedM = demandMatrix * d
+                string_Beginning = str(N) +" "+ matrix +" " + str(d)
 
-
+                perfect_theta= ev.perfect_theta(N,d,saturatedM)
+                perfect_string = string_Beginning + " perfect " + "NA " + str(perfect_theta)
+                print(perfect_string)
+                outputfile.write(perfect_string+"\n")
 if __name__ == "__main__":
-    matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    outputdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
-    n_values_used = [8,16]
-    d_s = [2,3,4,5,6,7]
+
     RRG_Iter = 6
     outputfile = open(outputdir+"output2", "w")
     outputfile.write("N matrix d Alg RRGIter throughput\n")
@@ -88,6 +108,7 @@ if __name__ == "__main__":
                 chordString = string_Beginning + " Chord " +"NA" + " " +str(chord_theta)
                 print(chordString)
                 outputfile.write( chordString+"\n")
+    writePerfectTheta()
 
 
 
