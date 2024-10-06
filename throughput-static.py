@@ -13,8 +13,8 @@ N = int(sys.argv[1])
 
 #%% 
 # Set the degree for each vertex
-# degree = sys.argv[2]  # Define the degree variable
-degree=4
+degree = sys.argv[2]  # Define the degree variable
+# degree=4
 #%%
 # List of matrices
 workdir="/home/vamsi/src/phd/codebase/rdcn-throughput/matrices/"
@@ -64,6 +64,8 @@ else:
 #%%
 print("mygrep,N,matrix,maxValue,networkType,degree,throughput")
 
+degree = 16
+matrixfile = "permutation-16"
 for degree in degrees:
     for matrixfile in matrices:
         demand = np.loadtxt(workdir+matrixfile+".mat", usecols=range(N))
@@ -72,11 +74,10 @@ for degree in degrees:
         print("################")
         print(matrixfile, "static")
         print("################")
-
-
+        
         Gstatic = nx.random_regular_graph(np.min([N-1,degree]), N)
-
-
+        
+        
         # Create a new Gurobi model
         model = gp.Model()
         

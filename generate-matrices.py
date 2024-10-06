@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 directory = "/home/vamsi/src/phd/writings/rdcn-throughput/master/plots/"
 workdir="./matrices/"
 heatmaps=["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3","topoopt"]
-
+#%%
 # Function to convert RGB to hexadecimal
 def rgb_to_hex(rgb):
     return '{:02x}{:02x}{:02x}'.format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
@@ -64,8 +64,9 @@ def rgb_to_hex(rgb):
 #     outputfile.close()
 
 #####################################################################################
- 
-for N in [8,16,32,64, 128, 256]:
+ #%%
+# for N in [8,16,32,48,64,128,512,256,1024]:
+for N in [512]:
     ######### Chessboard ######## 
     matrixname="chessboard-" + str(N)
     outputfile = open(workdir+matrixname+".mat", "w")
@@ -107,7 +108,7 @@ for N in [8,16,32,64, 128, 256]:
     outputfile.close()
 
     ######### Uniform + Permutation ######## 
-    for skew in [i/10 for i in range(11)]:
+    for skew in [i/10 for i in range(1,10)]:
         matrixname="skew-"+str(N)+"-"+str(skew)
         outputfile = open(workdir+matrixname+".mat", "w")
         skewdemand = np.zeros((N, N))

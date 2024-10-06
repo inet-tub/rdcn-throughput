@@ -90,6 +90,62 @@ def theta(G, M, N):#Path formulation of throughput given static topology G (curr
     #             print(v.varName, "=", v.x)
     # print("________________________________________________________________")
 
+# def thetaPathFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
+#     model = gp.Model()
+#     capacity = {}
+#     model.Params.LogToConsole = 1
+#     # model.Params.OptimalityTol = 1e-9
+#     # model.Params.FeasibilityTol = 1e-9
+#     # model.Params.IntFeasTol = 1e-9
+    
+#     Gprime=nx.DiGraph()
+#     for i in range(N):
+#         Gprime.add_node(i)
+        
+#     for i in range(N):
+#         for j in range(N):
+#             Gprime.add_edge(i,j)
+        
+#     if input_graph:
+#         for i in range(N):
+#             for j in range(N):
+#                     capacity[(i,j)] = G.number_of_edges(i,j) 
+#                     if(M[i,j]< 0): #In case of rounding, negative demand tells us how much capacity is left on that edge
+#                         capacity[(i, j)]-= M[i,j]
+#     else:
+#         for i in range(N):
+#             for j in range(N):
+#                 if i !=j:
+#                     capacity[(i, j)] = G[i,j]
+
+#     print("Adding flow vars")
+#     flow_variables = {}
+#     sdPaths = {}
+#     for i in range(N):
+#         for j in range(N):
+#             if i!=j:
+#                 sdPaths[(i,j)] = nx.edge_disjoint_paths(Gprime,i,j)
+#                 for path in sdPaths[(i,j)]:
+#                     flow_variables[str(path)] = model.addVar(vtype=GRB.CONTINUOUS,name=f'flow_{path}', lb = 0)
+    
+#     print("Demand and cap constraints")
+#     throughput = model.addVar(vtype=GRB.CONTINUOUS, name='throughput', lb=0, ub=1)
+#     model.update()
+    
+#     for s in range(N):
+#         for d in range(N):
+#             if s != d and M[s,d] > 0:
+#                 source_demand_constraint_expr = gp.quicksum(flow_variables[str(path)] for path in sdPaths[(s,d)] >= throughput * M[s, d])
+#                 capacity_constraint_expr = gp.quicksum(flow_variables[str(path)] for u in range(N) for v in range(N) for path in sdPaths[(u,v)] if (s,d) in path <= capacity[(s,d)])
+    
+#     print("optimizing")
+#     # Set the objective to maximize throughput
+#     model.setObjective(throughput, GRB.MAXIMIZE)
+    
+#     # Optimize the model
+#     model.optimize()
+#     return throughput.X
+
 
 def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
