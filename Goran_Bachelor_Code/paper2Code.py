@@ -30,7 +30,7 @@ def generate_synthmatrix_names(N):
         res[j+4] += str(N) + "-0." + str(j+1)
     return res
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
-workdir="/home/vamsi/src/phd/codebase/rdcn-throughput/matrices/"
+workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
 
 def trim_floats(val, tolerance=1e-9):
     if abs(val - round(val)) < tolerance:
@@ -54,6 +54,8 @@ def thetaSingleHop(G, M, N, input_graph = True):#Given static topology G and dem
             for j in range(N):
                 if i !=j:
                     capacity[(i, j)] = G[i,j]
+                if(M[i,j]< 0): #In case of rounding, negative demand tells us how much capacity is left on that edge
+                        capacity[(i, j)]-= M[i,j]
 
     
     flow_variables = {}
@@ -79,6 +81,33 @@ def thetaSingleHop(G, M, N, input_graph = True):#Given static topology G and dem
     # Optimize the model
     model.optimize()
     return throughput.X
+
+def thetaSingleHop2(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable with single hops only
+    capacity = np.zeros((N,N))
+    if(input_graph):
+        for i in range(N):
+            for j in range(N):
+                capacity[(i,j)] = G.number_of_edges(i,j) 
+                if(M[i,j]< 0): #In case of rounding, negative demand tells us how much capacity is left on that edge
+                        capacity[(i, j)]-= M[i,j]
+    else:
+        for i in range(N):
+            for j in range(N):
+                if i !=j:
+                    capacity[(i, j)] = G[i,j]
+                if(M[i,j]< 0): #In case of rounding, negative demand tells us how much capacity is left on that edge
+                        capacity[(i, j)]-= M[i,j]
+    
+    # To avoid division by zero, handle elements where demand is zero
+    # We set the ratio as infinity where demand is zero (so we ignore those cases).
+    with np.errstate(divide='ignore', invalid='ignore'):
+        ratios = np.where(M != 0, capacity / M, np.inf)
+    
+    # Find the smallest ratio (ignoring infinities)
+    smallest = min(1, np.min(ratios))
+    
+    return smallest
+
 
 def generalized_rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d; Assumes d-doubly stochastic matrix 
     model = gp.Model()
@@ -124,10 +153,13 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     max_sum = max(max_row_sum, max_col_sum)
     M = np.divide(M, max_sum)
     return M # call-by-reference doesn't work for some reason, hence returning M
-def vermillion_throughput(saturated_demand, d, k, N, MH = True):
+def randomized_vermillion_throughput(saturated_demand, d, k, N, MH = True):
     normalized_demand = return_normalized_matrix(saturated_demand)
+    modifiedM = addNoisetoMatrix(saturated_demand)
     deg = ((k-1)*N)
     scaled_demand = normalized_demand * deg
+    
+
     rounded_matrix = generalized_rounding(scaled_demand, N, deg)
     out_Left  = []
     in_Left = []
@@ -153,14 +185,17 @@ def vermillion_throughput(saturated_demand, d, k, N, MH = True):
     total_edge_cap = total_edge_cap *(d /(k*N))
     # print(np.array2string(total_edge_cap)) #Debug capacity print statement
     
-    thetaSH = thetaSingleHop(total_edge_cap, saturated_demand, N, input_graph=False)
+    thetaSH = thetaSingleHop2(total_edge_cap, modifiedM, N, input_graph=False)
     if(MH):
-        return (fct.thetaEdgeFormulation(total_edge_cap,saturated_demand, N, input_graph=False ), thetaSH)
+        return (fct.thetaEdgeFormulation(total_edge_cap,modifiedM, N, input_graph=False ), thetaSH)
     else:
         return thetaSH
-
-#%%
-
+def addNoisetoMatrix(M):
+    #TODO: Add noise
+    M = M
+    #Normalize
+    
+    return M
 
 #%%
 
@@ -177,4 +212,4 @@ if __name__ == "__main__":
     filtered_demand = return_normalized_matrix(loaded_demand)
     saturated_demand = filtered_demand * dE
     for k in k_s:
-        print("k = " + str(k) + ": " + str(vermillion_throughput(saturated_demand, dE, k , N, MH=False)))
+        print("k = " + str(k) + ": " + str(randomized_vermillion_throughput(saturated_demand, dE, k , N, MH=False)))
