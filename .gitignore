@@ -130,3 +130,5 @@ dmypy.json
 
 dump/
 matrices.zip
+#Output Files for now
+output.txt
