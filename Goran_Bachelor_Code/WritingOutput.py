@@ -60,7 +60,7 @@ def writePerfectTheta():
 if __name__ == "__main__":
 
     RRG_Iter = 6
-    outputfile = open(outputdir+"output2", "w")
+    outputfile = open(outputdir+"outputTest", "w")
     outputfile.write("N matrix d Alg RRGIter throughput\n")
     print("N matrix d Alg RRGIter throughput")
     
