@@ -30,7 +30,7 @@ def generate_synthmatrix_names(N):
         res[j+4] += str(N) + "-0." + str(j+1)
     return res
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
-workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+workdir="/home/vamsi/src/phd/codebase/rdcn-throughput/matrices/"
 
 def trim_floats(val, tolerance=1e-9):
     if abs(val - round(val)) < tolerance:
@@ -171,9 +171,10 @@ if __name__ == "__main__":
     matrices=[]
     N= 8 
     loaded_demand = np.loadtxt(workdir+"chessboard-8" + ".mat", usecols=range(N))
-    loaded_demand = loaded_demand * dE
+    # loaded_demand = loaded_demand * dE
+    eps = 1e-5
+    loaded_demand[loaded_demand < eps] = 0 # Filter loaded demand?
+    filtered_demand = return_normalized_matrix(loaded_demand)
+    saturated_demand = filtered_demand * dE
     for k in k_s:
-        print("k = " + str(k) + ": " + str(vermillion_throughput(loaded_demand, dE, k , N, MH=False)))
-
-    
-    
+        print("k = " + str(k) + ": " + str(vermillion_throughput(saturated_demand, dE, k , N, MH=False)))
