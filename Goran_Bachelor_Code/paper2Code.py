@@ -6,7 +6,7 @@ import Throughput_as_Function as fct
 import Rounding_Draft as rd
 import Floor_Draft as fd
 import matplotlib.pyplot as plt
-
+import matrixModification as MM
 #%%
 def generate_synthmatrix_names(N):
     res = [
@@ -153,9 +153,8 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     max_sum = max(max_row_sum, max_col_sum)
     M = np.divide(M, max_sum)
     return M # call-by-reference doesn't work for some reason, hence returning M
-def randomized_vermillion_throughput(saturated_demand, d, k, N, MH = True):
+def randomized_vermillion_throughput(saturated_demand, saturated_noise, d, k, N, MH = True):
     normalized_demand = return_normalized_matrix(saturated_demand)
-    modifiedM = addNoisetoMatrix(saturated_demand)
     deg = ((k-1)*N)
     scaled_demand = normalized_demand * deg
     
@@ -185,31 +184,31 @@ def randomized_vermillion_throughput(saturated_demand, d, k, N, MH = True):
     total_edge_cap = total_edge_cap *(d /(k*N))
     # print(np.array2string(total_edge_cap)) #Debug capacity print statement
     
-    thetaSH = thetaSingleHop2(total_edge_cap, modifiedM, N, input_graph=False)
+    SH_res = (thetaSingleHop2(total_edge_cap, saturated_demand, N, input_graph=False), thetaSingleHop2(total_edge_cap, saturated_noise, N, input_graph=False))
     if(MH):
-        return (fct.thetaEdgeFormulation(total_edge_cap,modifiedM, N, input_graph=False ), thetaSH)
+        return ((fct.thetaEdgeFormulation(total_edge_cap,saturated_demand, N, input_graph=False ), fct.thetaEdgeFormulation(total_edge_cap,saturated_noise, N, input_graph=False)), SH_res)
     else:
-        return thetaSH
-def addNoisetoMatrix(M):
-    #TODO: Add noise
-    M = M
-    #Normalize
-    
-    return M
+        return SH_res
+
 
 #%%
 
 if __name__ == "__main__":
     NValues=[8,16,32,48,64,128,256,512,1024]
     dE = 4
-    k_s=[2,3,4,5,6]
+    k_s=[2,3,4,5,6,12]
     matrices=[]
     N= 8 
-    loaded_demand = np.loadtxt(workdir+"chessboard-8" + ".mat", usecols=range(N))
+    loaded_demand = np.loadtxt(workdir+"permutation-8" + ".mat", usecols=range(N))
     # loaded_demand = loaded_demand * dE
     eps = 1e-5
     loaded_demand[loaded_demand < eps] = 0 # Filter loaded demand?
     filtered_demand = return_normalized_matrix(loaded_demand)
+    saturated_noise = MM.add_additive_noise(filtered_demand, N, 1) * dE
     saturated_demand = filtered_demand * dE
+
+    
     for k in k_s:
-        print("k = " + str(k) + ": " + str(randomized_vermillion_throughput(saturated_demand, dE, k , N, MH=False)))
+        res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, k , N)
+        print(  "k = " + str(k) + "(Without Noise): " + str( res[0][0] ))
+        print(  "k = " + str(k) + "(With Noise): " + str( res[0][1] ))

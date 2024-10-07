@@ -33,13 +33,14 @@ def add_multiplicative_noise(M, N, delta):
     np.fill_diagonal(matrix, 1)
     res  = M * matrix
     print(np.array2string(res,formatter={'float_kind':lambda x: "%.5f" % x}))
-    return M * matrix
+    return Sinkhorn_Knopp(M*matrix)
 def add_additive_noise(M, N, delta):
     matrix = np.random.normal(0,delta,(N,N))
     np.fill_diagonal(matrix, 0)
     M = np.clip((M+matrix), 0, 100)
     print(np.array2string(M,formatter={'float_kind':lambda x: "%.5f" % x}))
-    return M
+    return Sinkhorn_Knopp(M)
+
 
 
 if __name__ == "__main__":
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     print("____________________________")
 
 
-    add_M  = add_additive_noise(M, N, 0.05)
+    add_M  = add_additive_noise(M, N, 1)
 
     print("____________________________")
 
