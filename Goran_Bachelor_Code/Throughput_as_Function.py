@@ -236,14 +236,21 @@ if __name__ == "__main__":
 
 
 
-    degOut = [2, 2, 2, 2, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 4]
-    degIn = [2, 3, 3, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 4]
+    # degOut = [2, 2, 2, 2, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 4]
+    # degIn = [2, 3, 3, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 4]
+    d = 3
+    degOut = [d] * 16
+    degIn = [d] * 16
     graph = nx.directed_configuration_model(degIn, degOut)
     # graph = nx.random_regular_expander_graph(N, dE, max_tries= 10000 )
 
     nx.draw_circular(graph, with_labels= True)
     plt.show()
-    match_and_decrement(degOut, degIn)
+
+    graph2 = nx.random_regular_graph(d, 16)
+    nx.draw_circular(graph2, with_labels= True)
+    plt.show()
+    # match_and_decrement(degOut, degIn)
 
     # theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
     # G2.add_nodes_from(range(N))

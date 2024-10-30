@@ -195,16 +195,16 @@ def randomized_vermillion_throughput(saturated_demand, saturated_noise, d, k, N,
 
 if __name__ == "__main__":
     NValues=[8,16,32,48,64,128,256,512,1024]
-    dE = 4
-    k_s=[2,3,4,5,6,12]
+    dE = 8
+    k_s=[2,3,4,5,6]
     matrices=[]
-    N= 8 
-    loaded_demand = np.loadtxt(workdir+"permutation-8" + ".mat", usecols=range(N))
+    N= 16
+    loaded_demand = np.loadtxt(workdir+"random-skewed-16" + ".mat", usecols=range(N))
     # loaded_demand = loaded_demand * dE
     eps = 1e-5
     loaded_demand[loaded_demand < eps] = 0 # Filter loaded demand?
     filtered_demand = return_normalized_matrix(loaded_demand)
-    saturated_noise = MM.add_additive_noise(filtered_demand, N, 1) * dE
+    saturated_noise = MM.add_multiplicative_noise(MM.add_additive_noise(filtered_demand, N, 1),N, 0.25) * dE
     saturated_demand = filtered_demand * dE
 
     

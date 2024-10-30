@@ -271,14 +271,15 @@ def rotornet_throughput(saturated_demand, d ,N):
     return (fct.thetaEdgeFormulation(total_edge_cap, saturated_demand,N, False), thetaSingleHop(total_edge_cap, saturated_demand,N, False))
 
 #%%
-NValues=[8,16,32,48,64,128,256,512,1024]
-dE = 4
-k_s=[2,3,4,5,6]
-matrices=[matrices8, matrices16, matrices32, matrices48, matrices64, matrices128, matrices256, matrices512, matrices1024]
+
 
 #%%
 
 if __name__ == "__main__":
+    NValues=[8,16,32,48,64,128,256,512,1024]
+    dE = 4
+    k_s=[2,3,4,5,6]
+    matrices=[matrices8, matrices16, matrices32, matrices48, matrices64, matrices128, matrices256, matrices512, matrices1024]
     with open("nsdi-throughput-results.csv", "w") as outputfile:
         print("#######################################################")
         print("mygrep","n","d","matrix","alg","k","throughputSH","throughputMH")
