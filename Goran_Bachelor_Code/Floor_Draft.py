@@ -21,13 +21,13 @@ def thetaByFloor(N, d, M, RRGiter):#Returns throughput that can be achieved for 
             demand = np.array(M)
         demandFloor = np.floor(demand)
 
-        outDegree = [0]*N
-        inDegree = [0]*N
+        outDegree = [0]*N # How many outgoing links each node has left
+        inDegree = [0]*N # How many incoming links each node has left
         for row in range(N):
             outDegree[row] = int(np.min([d,N-1]) - np.sum(demandFloor[row]))
         for column in range(N):
             inDegree[column] = int(np.min([d,N-1]) - np.sum(demandFloor[:,column]))
-        dRes = np.min([N-1, np.min([outDegree,inDegree])])
+        dRes = np.min([N-1, np.min([outDegree,inDegree])])#Smallest val 
 
 
         outLeft = [ x - dRes for x in outDegree]
