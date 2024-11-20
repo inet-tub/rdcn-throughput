@@ -137,8 +137,9 @@ def alternativeTheta(N, d, M, RRGiter):
         # print(np.array2string(roundedMatrix))
         createResidual(demand, roundedMatrix)
         # print(np.array2string(demand, formatter={'float_kind':lambda x: "%.3f" % x}))
-        # G = nx.random_regular_graph(dRes, N)
-        (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGiter)
+        G = nx.random_regular_graph(dRes, N)
+        # (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGiter)
+        res = fct.thetaEdgeFormulation(G, demand, N)
         if res == 1:
             return iteration
     return 0
@@ -195,18 +196,17 @@ def altThetawGCM(N, d, M , RRGIter): # TODO: Change this into what Vamsi meant..
         BulkRowRemainders-=dRes
         BulkColRemainders-= dRes
         #Row Out; Col In
-        GCMOfRest = nx.directed_configuration_model(BulkColRemainders.tolist(), BulkRowRemainders.tolist())
-        for i in range(N):
-            for j in range(N):
-                if(GCMOfRest.number_of_edges(i,j) != 0):
-                    print(str(i) + " " + str(j) + ": " +str(GCMOfRest.number_of_edges(i,j)))
-                demand[i,j] -= GCMOfRest.number_of_edges(i,j)
-        # print(np.array2string(roundedMatrix))
+        # GCMOfRest = nx.directed_configuration_model(BulkColRemainders.tolist(), BulkRowRemainders.tolist())
+        fct.match_and_decrement(BulkColRemainders, BulkColRemainders, demand)
+        # for i in range(N):
+        #     for j in range(N):
+        #         if(GCMOfRest.number_of_edges(i,j) != 0):
+        #             print(str(i) + " " + str(j) + ": " +str(GCMOfRest.number_of_edges(i,j)))
+        #         demand[i,j] -= GCMOfRest.number_of_edges(i,j)
         createResidual(demand, roundedMatrix)
-        # print(np.array2string(demand, formatter={'float_kind':lambda x: "%.3f" % x}))
-        # G = nx.random_regular_graph(dRes, N)
-        (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGIter)
-        # res = fct.thetaEdgeFormulation(GCMOfRest, demand, N)
+        G = nx.random_regular_graph(dRes, N)
+        # (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGIter)
+        res = fct.thetaEdgeFormulation(G, demand, N)
         if res == 1:
             return iteration
     return 0

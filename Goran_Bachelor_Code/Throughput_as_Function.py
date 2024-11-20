@@ -59,46 +59,6 @@ def match_and_decrement(list_a, list_b, M):
 
 
 
-
-def theta(G, M, N):#Path formulation of throughput given static topology G (currently unreliable)
-    capacity = {}
-    for i in range(N):
-        for j in range(N):
-                capacity[(i,j)] = G.number_of_edges(i,j)
-
-    all_paths = {}
-    for u in G.nodes():
-        for v in G.nodes():
-            if u!=v: #If is fix by Vamsi(not from slides)
-                all_paths[u,v] = [list(zip(path,path[1:])) for path in nx.all_simple_paths(G, source=u,target=v)]
-
-    model = gp.Model("throughput")
-
-    flow_vars = {}
-    for(s, d), paths in all_paths.items():
-        for p in range(len(paths)):
-            flow_vars[s, d, p] = model.addVar(vtype= GRB.CONTINUOUS, name=f"flow_{s}_{d}_{p}",lb=0)
-
-    throughput = model.addVar(vtype=GRB.CONTINUOUS,name='troughput',lb=0,ub=1)
-
-    for u,v in G.edges():
-        model.addConstr(gp.quicksum(flow_vars[i,j,p] for (i,j), paths in all_paths.items() for p in range(len(paths)) if (u,v) in paths[p]) <= capacity[(u,v)],name =f"cap_{u}_{v}")
-
-    for u in G.nodes():
-        for v in G.nodes():
-            if u != v:
-                model.addConstr( gp.quicksum(flow_vars[u,v,p] for p in range(len(all_paths[u,v]))) >= throughput*M[u][v],name=f"M_{u}_{v}"  )
-
-    model.setObjective(throughput, GRB.MAXIMIZE)
-    model.optimize()
-
-    # print("Throughput for the given topology and the given demand matrix is:", throughput.X)
-    # for v in model.getVars():
-    #     if v.x != 0:
-    #             print(v.varName, "=", v.x)
-    # print("________________________________________________________________")
-
-
 def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
@@ -191,6 +151,16 @@ def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out 
                 return(best_iter, best_theta, best_G) # We'll never get better than 1 as throughput, so avoid calculation of next iterations
         
     return(best_iter, best_theta, best_G)
+
+def findavgRRGtheta(M, N, d, iter):
+    thetas = []
+    for i in range(iter):
+        G_temp = nx.random_regular_graph(d,N)
+        theta = thetaEdgeFormulation(G_temp, M, N)
+        thetas.append(theta)
+        # nx.draw_circular(G_temp, with_labels= True)
+        # plt.show()
+    return(np.mean(thetas))
 def createCircleGraph(N, d):
     CircleG= nx.MultiDiGraph()#d-Strong Circle
     for i in range(N):
@@ -212,7 +182,7 @@ if __name__ == "__main__":
     N=16
     dE=8
 
-    G = nx.random_regular_graph(dE,N)
+    # G = nx.random_regular_graph(dE,N)
 
 
 
@@ -220,6 +190,7 @@ if __name__ == "__main__":
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
     demand = np.loadtxt(workdir+"hybrid-parallelism.mat", usecols=range(N))
     demand = demand *dE
+    print(findavgRRGtheta(demand, N, dE, 6))
     # demand = np.zeros((N,N))
     # for i in range(N):
     #     for j in range(N):
@@ -238,18 +209,18 @@ if __name__ == "__main__":
 
     # degOut = [2, 2, 2, 2, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 4]
     # degIn = [2, 3, 3, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 4]
-    d = 3
-    degOut = [d] * 16
-    degIn = [d] * 16
-    graph = nx.directed_configuration_model(degIn, degOut)
-    # graph = nx.random_regular_expander_graph(N, dE, max_tries= 10000 )
+    # d = 3
+    # degOut = [d] * 16
+    # degIn = [d] * 16
+    # graph = nx.directed_configuration_model(degIn, degOut)
+    # # graph = nx.random_regular_expander_graph(N, dE, max_tries= 10000 )
 
-    nx.draw_circular(graph, with_labels= True)
-    plt.show()
+    # nx.draw_circular(graph, with_labels= True)
+    # plt.show()
 
-    graph2 = nx.random_regular_graph(d, 16)
-    nx.draw_circular(graph2, with_labels= True)
-    plt.show()
+    # graph2 = nx.random_regular_graph(d, 16)
+    # nx.draw_circular(graph2, with_labels= True)
+    # plt.show()
     # match_and_decrement(degOut, degIn)
 
     # theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
