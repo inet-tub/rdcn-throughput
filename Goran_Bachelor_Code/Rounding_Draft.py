@@ -8,8 +8,9 @@ import paperCode as pc
 def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d; Assumes d-doubly stochastic matrix 
     model = gp.Model()
     entry_vars = {}
-    print(np.array2string(M))
-    print(d)
+    # print(np.array2string(M))
+    # print(d)
+    # print("Beginning Rounding")
     model.params.LogToConsole = 0
     #Every entry in demand matrix has integer var that is either floor or ceiling
     for i in range(N):
@@ -38,6 +39,7 @@ def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such th
             if i !=j:
                 sol[i,j] = entry_vars[i,j].X
     # print(np.array2string(sol))
+    # print("Finished Rounding")
     return sol
 def createResidual(M, integer): #Modifies demand matrix M such that it becomes the residual matrix
     N = M.shape[0]
@@ -83,20 +85,19 @@ def residualRounding(M, N, rowGoals, colGoals):
 def thetaByRounding(N, d, M, RRGiter):#Returns throughput that can be achieved for given N, d and M with rounding heuristic. RRGiter determines how many RRGs you will try per iter
     iterations=[1-i*0.01 for i in range(99)]
     for iteration in iterations:
-        print("################")
-        print(iteration)
-        print("################")
+        # print("################")
+        # print(iteration)
+        # print("################")
         demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
-        print(np.array2string(demand))
+        # print(np.array2string(demand))
         # floor = np.floor(demand)
         
         dBulk = np.floor(d*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
         dRes = d - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
         roundedMatrix = rounding(demand, N, dBulk)
         createResidual(demand, roundedMatrix)  #
-        print(np.array2string(demand, formatter={'float_kind':lambda x: "%.3f" % x}))
-        # G = nx.random_regular_graph(dRes, N)
-        (_,res, _) = fct.findBestRRG(demand, N, dRes,RRGiter)
+        G = nx.random_regular_graph(dRes, N)
+        res = fct.thetaEdgeFormulation(G, demand, N)
         if res == 1:
             return iteration
     return 0

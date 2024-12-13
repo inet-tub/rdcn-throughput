@@ -18,6 +18,7 @@ import random
 def filtering(M, eps=1e-5):
     # print("_________________________________________________")
     M[M < eps] = 0
+    np.fill_diagonal(M, 0)
 def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scalar which is the biggest row or col sum; Afterwards every row/col sum leq 1 
     max_row_sum = M.sum(axis=1).max()
     max_col_sum = M.sum(axis=0).max()
@@ -25,6 +26,7 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     M = np.divide(M, max_sum)
     return M
 def match_and_decrement(list_a, list_b, M):
+    totalSH = 0
     # Ensure both lists are of equal length
     assert len(list_a) == len(list_b), "Lists must be of equal length"
     
@@ -49,20 +51,23 @@ def match_and_decrement(list_a, list_b, M):
         list_a[a_index] -= 1
         list_b[b_index] -= 1
         
+        totalSH += min(max(M[a_index, b_index], 0),1)
         M[a_index, b_index] -=1
         # Print for debugging purposes (optional)
     #     print(f"Decrementing A[{a_index}] and B[{b_index}]")
     #     print(f"List A: {list_a}")
     #     print(f"List B: {list_b}\n")
-    
+    return totalSH
     # print("All entries in List A have been decremented to 0.")
 
 
 
-def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G and demand matrix M, returns best throughput achievable
+def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
     capacity = {}
     model.Params.LogToConsole = 0
+    total_flow =0
+    SH_flow = 0
     # model.Params.OptimalityTol = 1e-9
     # model.Params.FeasibilityTol = 1e-9
     # model.Params.IntFeasTol = 1e-9
@@ -129,6 +134,18 @@ def thetaEdgeFormulation(G, M, N, input_graph = True):#Given static topology G a
     
     # Optimize the model
     model.optimize()
+    
+    if(measure_SH):
+        for s in range(N):
+            for d in range(N):
+                for i in range(N):
+                    for j in range(N):
+                        if i!=j and s!=d and M[s,d] != 0 and capacity[(i, j)] > 0:
+                            total_flow+=flow_variables[(i, j)][(s,d)].X
+                            if(i== s and d == j):
+                                SH_flow+= flow_variables[(i, j)][(s,d)].X
+        return (throughput.X,(total_flow, SH_flow))
+
     return throughput.X
 
 def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
@@ -180,17 +197,17 @@ def createPseudoChord(N,d):
 if __name__ == "__main__":
     
     N=16
-    dE=8
-
-    # G = nx.random_regular_graph(dE,N)
+    dE=1
+    G = nx.random_regular_graph(dE,N)
 
 
 
 
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demand = np.loadtxt(workdir+"hybrid-parallelism.mat", usecols=range(N))
+    demand = np.loadtxt(workdir+"heatmap1.mat", usecols=range(N))
     demand = demand *dE
-    print(findavgRRGtheta(demand, N, dE, 6))
+    # print(findavgRRGtheta(demand, N, dE, 6))
+    print(demand.sum())
     # demand = np.zeros((N,N))
     # for i in range(N):
     #     for j in range(N):
@@ -198,8 +215,9 @@ if __name__ == "__main__":
     #             demand[i][j] = d/(N-1)
 
     # theta(G, demand, N, d)
-
-    # thetaEdgeFormulation(G, demand, N)
+    # res = thetaEdgeFormulation(G, demand, N, measure_SH= True)[1]
+    # print(res)
+    # print(res[1] / res[0])
 
  
     # print(thetaEdgeFormulation(createPseudoChord(N, dE), demand, N))

@@ -4,9 +4,24 @@ import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
+from gurobipy import Model, GRB
+import matrixModification as mm
+import Throughput_as_Function as fct
+# times = []
+# throughputs = []
+# def log_best_throughput(model, where):
+#     if where == GRB.Callback.MIPNODE or where == GRB.Callback.SIMPLEX:  # Monitor progress
+#         try:
+#             best_obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST if where == GRB.Callback.MIPNODE else GRB.Callback.SIMPLEX_OBJBST)
+#             time_passed = model.cbGet(GRB.Callback.RUNTIME)
+#             if not throughputs or best_obj > throughputs[-1]:  # Only log improvements
+#                 throughputs.append(best_obj)
+#                 times.append(time_passed)
+#         except:
+#             pass  # Ignore errors if values aren't available
 
 def perfect_theta(N, d, M):
-
     model = gp.Model("throughput")
     model.Params.LogToConsole = 0
     model.setParam('TimeLimit', 3600)
@@ -61,8 +76,26 @@ def perfect_theta(N, d, M):
     #Set the objective: maximize throughput
     model.setObjective(throughput, GRB.MAXIMIZE)
 
+    
     model.optimize()
+    # for v in model.getVars():
+    #     if(v.x != 0):
+    #         print(v.varName, "=", v.x)
     return(model.objVal)
 
-if __name__ == "__main__":
-    print("Placeholder")
+    # model.optimize(log_best_throughput)
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(times, throughputs, marker='o', linestyle='-', color='b')
+    # plt.xlabel('Time (seconds)')
+    # plt.ylabel('Throughput')
+    # plt.title('Throughput Over Time')
+    # plt.grid()
+    # plt.show()
+    # print(model.objVal)
+if(__name__ == "__main__"):
+    matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    demandMatrix = np.loadtxt(matrixdir+"topoopt"+".mat", usecols=range(16))
+    fct.filtering(demandMatrix)
+    demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
+    demandMatrix = demandMatrix *6
+    print(perfect_theta(16, 6, demandMatrix))

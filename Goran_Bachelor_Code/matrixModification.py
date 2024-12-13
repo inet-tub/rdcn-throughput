@@ -44,19 +44,12 @@ def add_additive_noise(M, N, delta):
 
 
 if __name__ == "__main__":
-    N = 8
+    N = 16
     matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    M = demandMatrix = np.loadtxt(matrixdir+"permutation-8"+".mat", usecols=range(N))
+    M = demandMatrix = np.loadtxt(matrixdir+"topoopt"+".mat", usecols=range(N))
 
 
-    mult_M = add_multiplicative_noise(M, N, 0.125)
 
-    print("____________________________")
-
-
-    add_M  = add_additive_noise(M, N, 1)
-
-    print("____________________________")
 
     # print(np.array2string(fct.return_normalized_matrix(mult_M),formatter={'float_kind':lambda x: "%.5f" % x}))
 
@@ -64,8 +57,8 @@ if __name__ == "__main__":
 
 
 
-    print(np.array2string(Sinkhorn_Knopp(mult_M),formatter={'float_kind':lambda x: "%.5f" % x}))
+    print(np.array2string(M,formatter={'float_kind':lambda x: "%.5f" % x}))
 
-    print(np.array2string(Sinkhorn_Knopp(add_M),formatter={'float_kind':lambda x: "%.5f" % x}))
-
-    
+    print(np.array2string(Sinkhorn_Knopp(M),formatter={'float_kind':lambda x: "%.5f" % x}))
+    print("_________________________\n\n\n\n")
+    print(np.array2string(Sinkhorn_Knopp(M)-M,formatter={'float_kind':lambda x: "%.5f" % x}))
