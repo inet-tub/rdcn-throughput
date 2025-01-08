@@ -28,18 +28,34 @@ def Sinkhorn_Knopp(matrix , max_iters=10000, tol=1e-12):
 
 
 def add_multiplicative_noise(M, N, delta):
-    matrix = np.random.normal(1,delta,(N,N))
-    matrix = np.clip(matrix, 0.1, 2)
-    np.fill_diagonal(matrix, 1)
-    res  = M * matrix
-    print(np.array2string(res,formatter={'float_kind':lambda x: "%.5f" % x}))
-    return Sinkhorn_Knopp(M*matrix)
+    i = 0
+    res = np.zeros((N,N))
+    while np.array_equal(res, np.zeros((N,N))):
+        matrix = np.random.normal(1,delta,(N,N))
+        matrix = np.clip(matrix, 0.1, 2)
+        np.fill_diagonal(matrix, 0)
+        res  = M * matrix
+        i = i+1
+        if i == 100:
+            res = np.ones((N,N))/N
+            np.fill_diagonal(res, 0)
+            break
+    # print(np.array2string(res,formatter={'float_kind':lambda x: "%.5f" % x}))
+    return Sinkhorn_Knopp(res)
 def add_additive_noise(M, N, delta):
-    matrix = np.random.normal(0,delta,(N,N))
-    np.fill_diagonal(matrix, 0)
-    M = np.clip((M+matrix), 0, 100)
-    print(np.array2string(M,formatter={'float_kind':lambda x: "%.5f" % x}))
-    return Sinkhorn_Knopp(M)
+    i = 0
+    res = np.zeros((N,N))
+    while np.array_equal(res, np.zeros((N,N))):
+        matrix = np.random.normal(0,delta,(N,N))
+        np.fill_diagonal(matrix, 0)
+        res = np.clip((M+matrix), 0, 100)
+        i=i+1
+        if i ==100:
+            res = np.ones((N,N))/N
+            np.fill_diagonal(res, 0)
+            break
+    # print(np.array2string(M,formatter={'float_kind':lambda x: "%.5f" % x}))
+    return Sinkhorn_Knopp(res)
 
 
 

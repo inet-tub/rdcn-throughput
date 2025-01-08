@@ -7,31 +7,27 @@ import Rounding_Draft as rd
 import Floor_Draft as fd
 import matplotlib.pyplot as plt
 import matrixModification as MM
+import random
+import sys
 #%%
 def generate_synthmatrix_names(N):
     res = [
     "chessboard-",
     "uniform-",
     "permutation-",
-    "random-skewed-",
-    "skew-",
-    "skew-",
-    "skew-",
-    "skew-",
-    "skew-",
     "skew-",
     "skew-",
     "skew-",
     "skew-",
     ]
-    for i in range(4):
+    for i in range(3):
         res[i] += str(N)
-    for j in range(9):
-        res[j+4] += str(N) + "-0." + str(j+1)
+    for j in range(4):
+        res[j+3] += str(N) + "-0." + str(2*(j+1))
     return res
-organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
-workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-
+organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1"]
+workdir="/home/vamsi/src/phd/codebase/rdcn-throughput/matrices/"
+#%%
 def trim_floats(val, tolerance=1e-9):
     if abs(val - round(val)) < tolerance:
         return round(val)
@@ -154,7 +150,7 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     M = np.divide(M, max_sum)
     return M # call-by-reference doesn't work for some reason, hence returning M
 def randomized_vermillion_throughput(saturated_demand, saturated_noise, d, k, N, MH = True):
-    normalized_demand = return_normalized_matrix(saturated_demand)
+    normalized_demand = return_normalized_matrix(saturated_noise)
     deg = ((k-1)*N)
     scaled_demand = normalized_demand * deg
     
@@ -194,21 +190,72 @@ def randomized_vermillion_throughput(saturated_demand, saturated_noise, d, k, N,
 #%%
 
 if __name__ == "__main__":
-    NValues=[8,16,32,48,64,128,256,512,1024]
-    dE = 8
-    k_s=[2,3,4,5,6]
-    matrices=[]
-    N= 16
-    loaded_demand = np.loadtxt(workdir+"random-skewed-16" + ".mat", usecols=range(N))
-    # loaded_demand = loaded_demand * dE
-    eps = 1e-5
-    loaded_demand[loaded_demand < eps] = 0 # Filter loaded demand?
-    filtered_demand = return_normalized_matrix(loaded_demand)
-    saturated_noise = MM.add_multiplicative_noise(MM.add_additive_noise(filtered_demand, N, 1),N, 0.25) * dE
-    saturated_demand = filtered_demand * dE
-
     
-    for k in k_s:
-        res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, k , N)
-        print(  "k = " + str(k) + "(Without Noise): " + str( res[0][0] ))
-        print(  "k = " + str(k) + "(With Noise): " + str( res[0][1] ))
+    NValues=[8,16,32]
+    # NValues=[8]
+    dE = 4
+    k_s=[1,2,3,4,5,6,7,8,9,10]
+    noise_values = np.linspace(0, dE/3,10)
+    
+    N = int(sys.argv[1])
+    noise = int(sys.argv[2])
+
+    with open("sigmetrics-throughput-results-"+str(N)+"-"+str(noise)+".csv", "w") as outputfile:
+        matrices=generate_synthmatrix_names(N)
+        
+        if N==16:
+            matrices = matrices + organicmatrices16
+        
+        for matrix in matrices:
+            loaded_demand = np.loadtxt(workdir+matrix+".mat", usecols=range(N))
+            # loaded_demand = loaded_demand * dE
+            eps = 1e-5
+            loaded_demand[loaded_demand < eps] = 0 # Filter loaded demand?
+            filtered_demand = return_normalized_matrix(loaded_demand)
+            
+            saturated_noise = return_normalized_matrix(MM.add_additive_noise(filtered_demand, N, noise_values[noise])) * dE
+            np.fill_diagonal(saturated_noise, 0)
+            saturated_demand = filtered_demand * dE
+
+            for k in k_s:
+                res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, k , N)
+                print(matrix, "vermConsistency", k, N, dE, noise, "add", res[0][1])
+                print(matrix, "vermConsistency", k, N, dE, noise, "add", res[0][1] ,file=outputfile)
+                print(matrix, "vermRobustness", k, N, dE, noise, "add", res[0][1])
+                print(matrix, "vermRobustness", k, N, dE, noise, "add", res[0][1] ,file=outputfile)
+                
+                randC = list()
+                randR = list()
+                for i in range(10):
+                    res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, random.randint(1,k+1) , N)
+                    randC.append(res[0][1])
+                    randR.append(res[0][0])
+                
+                print(matrix, "randConsistency", k, N, dE, noise, "add", np.mean(randC))
+                print(matrix, "randConsistency", k, N, dE, noise, "add", np.mean(randC) ,file=outputfile)
+                print(matrix, "randRobustness", k, N, dE, noise, "add", np.mean(randR))
+                print(matrix, "randRobustness", k, N, dE, noise, "add", np.mean(randR) ,file=outputfile)
+                
+                
+            saturated_noise = return_normalized_matrix(MM.add_multiplicative_noise(filtered_demand, N, noise_values[noise])) * dE
+            np.fill_diagonal(saturated_noise, 0)
+            saturated_demand = filtered_demand * dE
+
+            for k in k_s:
+                res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, k , N)
+                print(matrix, "randConsistency", k, N, dE, noise, "mult", res[0][1])
+                print(matrix, "randConsistency", k, N, dE, noise, "mult", res[0][1] ,file=outputfile)
+                print(matrix, "randRobustness", k, N, dE, noise, "mult", res[0][0])
+                print(matrix, "randRobustness", k, N, dE, noise, "mult", res[0][0] ,file=outputfile)
+                
+                randC = list()
+                randR = list()
+                for i in range(10):
+                    res = randomized_vermillion_throughput(saturated_demand,saturated_noise ,dE, random.randint(1,k+1) , N)
+                    randC.append(res[0][1])
+                    randR.append(res[0][0])
+                
+                print(matrix, "randConsistency", k, N, dE, noise, "mult", np.mean(randC))
+                print(matrix, "randConsistency", k, N, dE, noise, "mult", np.mean(randC) ,file=outputfile)
+                print(matrix, "randRobustness", k, N, dE, noise, "mult", np.mean(randR))
+                print(matrix, "randRobustness", k, N, dE, noise, "mult", np.mean(randR) ,file=outputfile)
