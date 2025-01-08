@@ -4,12 +4,32 @@ import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
 import numpy as np
+import matplotlib as mpl
+mpl.use('TkAgg')  
 import matplotlib.pyplot as plt
 from gurobipy import Model, GRB
 import matrixModification as mm
 import Throughput_as_Function as fct
-# times = []
-# throughputs = []
+times = []
+throughputs = []
+upperBounds = []
+def log_theta_andUB(model, where):
+    if where == GRB.Callback.MIP:  # Check for the MIP callback context
+        try:
+            # Retrieve runtime, upper bound, and best feasible solution
+            time = model.cbGet(GRB.Callback.RUNTIME)
+            upper_bound = model.cbGet(GRB.Callback.MIP_OBJBND)  # Upper bound
+            best_obj = model.cbGet(GRB.Callback.MIP_OBJBST)  # Best feasible solution
+            
+            # Append values to lists
+            times.append(time)
+            throughputs.append(best_obj)
+            upperBounds.append(upper_bound)
+            
+            # Print values for debugging
+            # print(f"Time: {time}, UB: {upper_bound}, LB: {best_obj}")
+        except gp.GurobiError as e:
+            print(f"GurobiError: {e}")
 # def log_best_throughput(model, where):
 #     if where == GRB.Callback.MIPNODE or where == GRB.Callback.SIMPLEX:  # Monitor progress
 #         try:
@@ -21,7 +41,8 @@ import Throughput_as_Function as fct
 #         except:
 #             pass  # Ignore errors if values aren't available
 
-def perfect_theta(N, d, M):
+
+def perfect_theta(N, d, M, measure_SH = False):
     model = gp.Model("throughput")
     model.Params.LogToConsole = 0
     model.setParam('TimeLimit', 3600)
@@ -77,25 +98,59 @@ def perfect_theta(N, d, M):
     model.setObjective(throughput, GRB.MAXIMIZE)
 
     
-    model.optimize()
+    # model.optimize()
     # for v in model.getVars():
     #     if(v.x != 0):
     #         print(v.varName, "=", v.x)
-    return(model.objVal)
+    
+    model.optimize()
 
-    # model.optimize(log_best_throughput)
+    total_flow =0
+    SH_flow = 0
+
+    if(measure_SH):
+        for s in range(N):
+            for d in range(N):
+                for i in range(N):
+                    for j in range(N):
+                        if i!=j and s!=d and M[s,d] > 0:
+                            total_flow+=flow_vars[s,d,i,j].X
+                            if(i== s and d == j):
+                                SH_flow+= flow_vars[s,d,i,j].X
+        return (model.objVal,(total_flow, SH_flow))
+
+
+    # model.optimize(log_theta_andUB)
     # plt.figure(figsize=(10, 6))
-    # plt.plot(times, throughputs, marker='o', linestyle='-', color='b')
-    # plt.xlabel('Time (seconds)')
-    # plt.ylabel('Throughput')
-    # plt.title('Throughput Over Time')
-    # plt.grid()
+    # print(times)
+    # print(upperBounds)
+    # print(throughputs)
+    # plt.plot(times, upperBounds, label='Upper Bound', color='red', linestyle='--')
+    # plt.plot(times, throughputs, label='Best throughput found', color='blue', linestyle='-')
+
+
+
+    # time_new = 15.13
+    # value_new = 0.82
+    # plt.scatter(time_new, value_new, label='Floor All Gamma Routed', color='yellow', s=100, zorder=3)
+# #Add labels, title, and legend
+    # plt.xlabel('Time (s)', fontsize = 24)
+    # plt.ylabel('Objective Value', fontsize = 24)
+    # # plt.title('Convergence of Upper and Lower Bounds in Optimization', fontsize = 28)
+    # plt.legend(fontsize=24, loc='best')
+    # plt.grid(True)
+    # plt.tick_params(axis='both', which='major', labelsize=20)  # Adjust fontsize here
+    # plt.ylim(0, 1)  # Objective ranges from 0 to 1
+    # plt.savefig("boundconvergence2.svg", format="svg")
+    # # Show the plot
     # plt.show()
-    # print(model.objVal)
+    
+    # plt.close()
+    return(model.objVal)
 if(__name__ == "__main__"):
     matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(matrixdir+"topoopt"+".mat", usecols=range(16))
-    fct.filtering(demandMatrix)
-    demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
-    demandMatrix = demandMatrix *6
-    print(perfect_theta(16, 6, demandMatrix))
+    demandMatrix = np.loadtxt(matrixdir+"skew-16-0.5"+".mat", usecols=range(16))
+    # fct.filtering(demandMatrix)
+    # demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
+    demandMatrix = demandMatrix *14
+    print(perfect_theta(16, 14, demandMatrix))

@@ -40,32 +40,40 @@ skews16 = [
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+alg_styles = {}
+predefined_alg_order = ['Optimal', 'Floor', 'Rounding', 'RRG', 'Ring']
+def initialize_styles(df):
+    global alg_styles
+    algs = [alg for alg in predefined_alg_order if alg in df['Alg'].unique()]
+    custom_palette = sns.color_palette("husl", n_colors=len(algs))
+    marker_styles = ['o', 's', 'D', '^', 'P', '*', 'v', 'X', 'h', '+']  # Extend if needed
 
+    # Populate the dictionary with colors and markers
+    alg_styles = {
+        alg: {'color': custom_palette[i], 'marker': marker_styles[i % len(marker_styles)]}
+        for i, alg in enumerate(algs)
+    }
 def increasing_skew(N, d, df):
-    # Define the set of matrices
-
-
-    # Filter the DataFrame for the given N and d
     filtered_df = df[(df['N'] == N) & (df['d'] == d)]
-    
-    if(N == 16):
+
+    # Enforce matrix ordering
+    if N == 16:
         filtered_df['matrix'] = pd.Categorical(filtered_df['matrix'], categories=skews16, ordered=True)
-    elif(N==8):
+    elif N == 8:
         filtered_df['matrix'] = pd.Categorical(filtered_df['matrix'], categories=skews8, ordered=True)
     filtered_df = filtered_df.sort_values('matrix')
 
-    # Set a modern style
+    # Enforce consistent Alg ordering
+    filtered_df['Alg'] = pd.Categorical(filtered_df['Alg'], categories=predefined_alg_order, ordered=True)
+
+    plt.figure(figsize=(12, 7))
     sns.set_theme(style="whitegrid", font_scale=1.5)
     
-    # Create a custom color palette and marker styles
-    custom_palette = sns.color_palette("husl", n_colors=len(filtered_df['Alg'].unique()))
-    marker_styles = ['o', 's', 'D', '^', 'P', '*']  # Extend as needed
+    # Use the predefined styles
+    custom_palette = [alg_styles[alg]['color'] for alg in filtered_df['Alg'].cat.categories]
+    marker_styles = [alg_styles[alg]['marker'] for alg in filtered_df['Alg'].cat.categories]
 
-    # Initialize the plot with a larger size
-    plt.figure(figsize=(12, 7))
-
-    # Plot using seaborn
-    sns.lineplot(
+    ax =sns.lineplot(
         data=filtered_df,
         x='matrix',
         y='throughput',
@@ -74,45 +82,43 @@ def increasing_skew(N, d, df):
         markers=marker_styles,
         dashes=False,
         palette=custom_palette,
-        linewidth=2.5,
-        markersize=10
+        linewidth=3,
+        markersize=12
     )
-
-    # Add labels, title, and enhance gridlines
-    plt.xlabel("Matrix")
+    plt.xlabel("")
     plt.ylabel("Throughput")
-    # plt.title(f"Throughput Progression for N={N}, d={d}")
-    plt.xticks(rotation=45)  # Rotate x-axis labels for readability
-    plt.grid(color='grey', linestyle='-', linewidth=0.5, alpha=0.7)
+    plt.xticks(rotation=45)
+    plt.grid(color='grey', linestyle='-', linewidth=2, alpha=0.6)
+    # ax.set_ylim(0.1,1.1)
+    # ax.set_yscale("log")
+    # ax.set_yticks([0.3, 0.5, 0.7, 0.9, 1])
+    # ax.set_yticklabels(["0.3","0.5","0.7","0.9","1"])
 
-    # Add a legend
+    # Enforce consistent legend order
     plt.legend(title="Algorithm", loc="upper left", bbox_to_anchor=(1, 1))
 
-    # Adjust layout for better appearance
     plt.tight_layout()
-    plt.savefig("increasingskewsN="+str(N)+"d=" + str(d)+ ".png", dpi=300)
-
-    # Show the plot
+    plt.savefig(f"increasingskewsN={N}d={d}.svg", format="svg", dpi=300)
     plt.show()
-
-
 def avg_theta_by_d(N, df):
     df = df.query("N == " + str(N))
-    
-    # Calculate the average throughput for each heuristic for each value of d
     avg_throughput = df.groupby(['d', 'Alg'])['throughput'].mean().reset_index()
 
-    # Initialize the plot with a larger size
-    plt.figure(figsize=(12, 7))
+    # Enforce consistent Alg ordering
+    avg_throughput['Alg'] = pd.Categorical(avg_throughput['Alg'], categories=predefined_alg_order, ordered=True)
 
-    # Set a modern style
+    # Print the averages
+    print("[Alg] [d] [avg throughput]")
+    for _, row in avg_throughput.iterrows():
+        print(f"{row['Alg']} {row['d']} {row['throughput']:.3f}")
+    
+    plt.figure(figsize=(12, 7))
     sns.set_theme(style="whitegrid", font_scale=1.5)
     
-    # Use a custom color palette and marker styles
-    custom_palette = sns.color_palette("husl", n_colors=len(avg_throughput['Alg'].unique()))
-    marker_styles = ['o', 's', 'D', '^', 'P', '*']  # Add more if needed
+    # Use the predefined styles
+    custom_palette = [alg_styles[alg]['color'] for alg in avg_throughput['Alg'].cat.categories]
+    marker_styles = [alg_styles[alg]['marker'] for alg in avg_throughput['Alg'].cat.categories]
 
-    # Plot using seaborn
     sns.lineplot(
         data=avg_throughput, 
         x='d', 
@@ -126,26 +132,33 @@ def avg_theta_by_d(N, df):
         markersize=10
     )
     plt.grid(color='grey', linestyle='-', linewidth=2, alpha=0.6)
-
-    # Custom title and labels
-    # plt.title("Average Throughput by Heuristic for Different Values of d with N = "+ str(N), fontsize=16, weight='bold')
     plt.xlabel("Degree Constraint (d)", fontsize=22)
     plt.ylabel("Average Throughput", fontsize=22)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     
-    # Customize legend
-    plt.legend(title="Algorithm", loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., fontsize=12)
-    
-    # Save the figure with tight layout
+    # Enforce consistent legend order
+    plt.legend(title="Algorithm", loc='upper left',  bbox_to_anchor=(1.05, 1), borderaxespad=0., fontsize=16)
+
     plt.tight_layout()
-    plt.savefig("average_throughput_plot_stylishN"+str(N)+".png", dpi=300)
-    
-    # Show the plot
-    plt.show()   
+    plt.savefig(f"average_throughput_plot_stylishN{N}.svg", format="svg", dpi=300)
+    plt.show()
 def min_theta_by_d(N, df):
-    df = df.query("N == " + str(N))
-    
-    # Calculate the average throughput for each heuristic for each value of d
-    avg_throughput = df.groupby(['d', 'Alg'])['throughput'].min().reset_index()
+    # Filter the DataFrame for the specified N
+    df_filtered = df.query("N == @N")
+
+    # Calculate the minimum throughput for each heuristic for each value of d
+    min_throughput = df_filtered.groupby(['d', 'Alg'])['throughput'].min().reset_index()
+
+    # Merge back with the original dataframe to get the corresponding 'matrix' value
+    merged_df = pd.merge(min_throughput, df_filtered, on=['d', 'Alg', 'throughput'], how='left')
+
+    # Print the details for each minimum throughput point
+    for _, row in merged_df.iterrows():
+        print(f"{row['Alg']} {row['d']} {row['throughput']} {row['matrix']}")
+
+    # Enforce consistent Alg ordering
+    min_throughput['Alg'] = pd.Categorical(min_throughput['Alg'], categories=predefined_alg_order, ordered=True)
 
     # Initialize the plot with a larger size
     plt.figure(figsize=(12, 7))
@@ -153,13 +166,13 @@ def min_theta_by_d(N, df):
     # Set a modern style
     sns.set_theme(style="whitegrid", font_scale=1.2)
     
-    # Use a custom color palette and marker styles
-    custom_palette = sns.color_palette("husl", n_colors=len(avg_throughput['Alg'].unique()))
-    marker_styles = ['o', 's', 'D', '^', 'P', '*']  # Add more if needed
+    # Use the predefined styles
+    custom_palette = [alg_styles[alg]['color'] for alg in min_throughput['Alg'].cat.categories]
+    marker_styles = [alg_styles[alg]['marker'] for alg in min_throughput['Alg'].cat.categories]
 
     # Plot using seaborn
     sns.lineplot(
-        data=avg_throughput, 
+        data=min_throughput, 
         x='d', 
         y='throughput', 
         hue='Alg', 
@@ -170,33 +183,96 @@ def min_theta_by_d(N, df):
         linewidth=2.5,
         markersize=10
     )
-
+    plt.grid(color='grey', linestyle='-', linewidth=2, alpha=0.6)
     # Custom title and labels
-    # plt.title("Minimum Throughput by Heuristic for Different Values of d with N = "+ str(N), fontsize=16, weight='bold')
     plt.xlabel("Degree Constraint (d)", fontsize=22)
     plt.ylabel("Minimum Throughput", fontsize=22)
-    
-    # Customize legend
-    plt.legend(title="Algorithm", loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., fontsize=12)
-    
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
+    # Customize legend with consistent ordering
+    plt.legend(title="Algorithm", loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., fontsize=16)
+
     # Save the figure with tight layout
     plt.tight_layout()
-    plt.savefig("minimum_throughput_plot_stylishN"+str(N)+".png", dpi=300)
-    
-    # Show the plot
-    plt.show()   
+    plt.savefig(f"minimum_throughput_plot_stylishN{N}.svg", format="svg", dpi=300)
 
-def avg_total_theta(df, N, d):
-    df = df.query("N == "+str(N))
-    df = df.query("d =="+str(d))
-    # Initialize the plot with a larger vertical size
+    # Show the plot
+    plt.show()
+def avg_total_SH(df):
+    # Enforce consistent Alg ordering
+    df['Alg'] = pd.Categorical(df['Alg'], categories=predefined_alg_order, ordered=True)
+    
+    # Compute mean throughput per algorithm
+    mean_throughput = df.groupby('Alg')['SH'].mean()
+
+    # Print the mean throughput for each algorithm
+    print("Mean SH share per Algorithm:")
+    for alg, mean_value in mean_throughput.items():
+        print(f"{alg}: {mean_value:.3f}")
+
+    # Initialize the plot with a larger size
     plt.figure(figsize=(12, 8))
 
-    # Set a modern theme
+    # Set a modern style
     sns.set_theme(style="whitegrid", font_scale=1.2)
     
-    # Use a categorical color palette
-    custom_palette = sns.color_palette("Set2", n_colors=len(df['Alg'].unique()))
+    # Use predefined colors for the algorithms
+    custom_palette = [alg_styles[alg]['color'] for alg in df['Alg'].cat.categories]
+
+    # Plot using seaborn boxplot
+    ax = sns.boxplot(
+        data=df,
+        x='Alg',
+        y='SH',
+        palette=custom_palette,
+        linewidth=1.5,
+        showmeans=True,  # Show the mean
+        meanline=True,  # Mean represented as a line
+        meanprops={
+            "color": "red", 
+            "linestyle": "--", 
+            "linewidth": 2
+        },
+        boxprops={"edgecolor": "black"},  # Outline the box
+        whiskerprops={"color": "black"},
+        capprops={"color": "black"},
+        medianprops={"color": "blue", "linewidth": 2}  # Highlight median
+    )
+
+    # Custom title and labels
+    plt.xlabel("")  # Remove x-axis label
+    plt.ylabel("SH", fontsize=22)
+    
+    # Rotate x-axis labels for better visibility
+    plt.xticks(rotation=45, ha='right', fontsize=20)
+    plt.yticks(fontsize=20)
+
+    # Adjust layout for better spacing
+    plt.tight_layout()
+    plt.savefig(f"SH_boxplot_allNs.svg", format="svg", dpi=300)
+    
+    # Show the plot
+    plt.show()
+def avg_total_theta(df):
+    # Enforce consistent Alg ordering
+    df['Alg'] = pd.Categorical(df['Alg'], categories=predefined_alg_order, ordered=True)
+    
+    # Compute mean throughput per algorithm
+    mean_throughput = df.groupby('Alg')['throughput'].mean()
+
+    # Print the mean throughput for each algorithm
+    print("Mean Throughput per Algorithm:")
+    for alg, mean_value in mean_throughput.items():
+        print(f"{alg}: {mean_value:.3f}")
+
+    # Initialize the plot with a larger size
+    plt.figure(figsize=(12, 8))
+
+    # Set a modern style
+    sns.set_theme(style="whitegrid", font_scale=1.2)
+    
+    # Use predefined colors for the algorithms
+    custom_palette = [alg_styles[alg]['color'] for alg in df['Alg'].cat.categories]
 
     # Plot using seaborn boxplot
     ax = sns.boxplot(
@@ -219,112 +295,95 @@ def avg_total_theta(df, N, d):
     )
 
     # Custom title and labels
-    # plt.title("Throughput Distribution by Heuristic", fontsize=18, weight='bold', pad=20)
-    plt.xlabel("Topology", fontsize=22)
+    plt.xlabel("")  # Remove x-axis label
     plt.ylabel("Throughput", fontsize=22)
     
-    # Rotate x-axis labels for better visibility if necessary
-    plt.xticks(rotation=45, ha='right', fontsize=12)
+    # Rotate x-axis labels for better visibility
+    plt.xticks(rotation=45, ha='right', fontsize=20)
+    plt.yticks(fontsize=20)
 
     # Adjust layout for better spacing
     plt.tight_layout()
-    plt.savefig("throughput_boxplot.png", dpi=300)
+    plt.savefig(f"throughput_boxplot_allNs.svg", format="svg", dpi=300)
     
     # Show the plot
     plt.show()
 
+def plot_2D_nparray(matrix, logscale=True, vmin=1e-3, vmax=1, name= "2Darray"):  # vmin and vmax added
+    """
+    Plots a 2D numpy array with a fixed color scale.
 
-def avg_total_theta_barplot(df):
-    df = df.query("N == 8")
-    # Calculate the average throughput for each heuristic
-    avg_throughput = df.groupby(['Alg'])['throughput'].mean().reset_index()
-
-    # Initialize the plot with a larger vertical size
-    plt.figure(figsize=(12, 8))
-
-    # Set a modern theme
-    sns.set_theme(style="whitegrid", font_scale=1.2)
-    
-    # Use a categorical color palette
-    custom_palette = sns.color_palette("Set2", n_colors=len(avg_throughput['Alg'].unique()))
-
-    # Plot using seaborn
-    ax = sns.barplot(
-        data=avg_throughput, 
-        x='Alg', 
-        y='throughput', 
-        palette=custom_palette, 
-        edgecolor='black'
-    )
-
-    # Annotate each bar with its value, with consistent offset
-    for index, row in avg_throughput.iterrows():
-        bar_height = row['throughput']
-        ax.text(
-            index, 
-            bar_height + (bar_height * 0.02),  # Offset based on bar height
-            f"{bar_height:.2f}", 
-            ha='center', 
-            va='bottom', 
-            fontsize=11, 
-            weight='bold'
-        )
-
-    # Custom title and labels
-    plt.title("Average Throughput by Heuristic", fontsize=18, weight='bold', pad=20)
-    plt.xlabel("Heuristic", fontsize=14)
-    plt.ylabel("Average Throughput", fontsize=14)
-    
-    # Rotate x-axis labels for better visibility if necessary
-    plt.xticks(rotation=45, ha='right', fontsize=12)
-
-    # Adjust layout for better spacing
-    plt.tight_layout()
-    plt.savefig("average_throughput_barplot_fixed.png", dpi=300)
-    
-    # Show the plot
-    plt.show()
-def plot_by_matrix(matrixname, df):
-    df = df[df['matrix'] == matrixname]
-
-    # Initialize the plot
-    plt.figure(figsize=(10, 6))
-
-    # Plot using seaborn
-    sns.lineplot(data=df, x='d', y='throughput', hue='Alg', marker='o')
-
-    # plt.title("Throughput by Heuristic for Different Values of d")
-    plt.xlabel("Degree Constraint (d)")
-    plt.ylabel("Throughput")
-
-    plt.savefig("average_throughput_plot.png")
-    plt.show()
-def plot_2D_nparray(matrix, logscale = True):
+    Parameters:
+        matrix (2D np.array): The array to plot.
+        logscale (bool): Whether to use log scaling for the color normalization.
+        vmin (float): Minimum value for the color scale.
+        vmax (float): Maximum value for the color scale.
+    """
     fig = plt.figure(figsize=(6, 3.2))
-
     ax = fig.add_subplot(111)
-    ax.set_title('colorMap')
+    # ax.set_title('colorMap')
 
-    # Apply a logarithmic normalization
-    norm = LogNorm(vmin=np.min(matrix[matrix > 0]), vmax=np.max(matrix))
+    # Apply a logarithmic normalization with fixed vmin and vmax
+    if logscale:
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = None  # Use linear scaling
+
+    # Plot the matrix
     im = plt.imshow(matrix, norm=norm, cmap='viridis')
     ax.set_aspect('equal')
 
-    # Add a colorbar with the log scale
-    cax = fig.add_axes([0.12, 0.1, 0.78, 0.8])
-    cax.get_xaxis().set_visible(False)
-    cax.get_yaxis().set_visible(False)
-    cax.patch.set_alpha(0)
-    cax.set_frame_on(False)
-    plt.colorbar(im, orientation='vertical')
-    plt.savefig("2Darray2.png")
+    # Add a colorbar
+    plt.colorbar(im, orientation='vertical', fraction=0.046, pad=0.04)
+    
+    # Save and display the figure
+    plt.savefig(name +".svg", format="svg", bbox_inches='tight')
     plt.show()
-def filterDataframe(df, alt_rounding = False, sinkhorn = False, full_skews = False, onlyhalfskew = True, cicle= True, chord=True):
+def plot_2D_nparray_with_labels(matrix, vmin=1e-3, vmax=6, name="2Darray"):
+    """
+    Plots a 2D numpy array using a logarithmic colormap, labels non-zero integer values,
+    and removes the y-axis labels.
+
+    Parameters:
+        matrix (2D np.array): The array to plot.
+        vmin (float): Minimum value for the color scale.
+        vmax (float): Maximum value for the color scale.
+        name (str): Filename for saving the plot.
+    """
+    fig, ax = plt.subplots(figsize=(6, 3.2))
+
+    # Use LogNorm for the colormap
+    norm = LogNorm(vmin=vmin, vmax=vmax)
+    im = ax.imshow(matrix, norm=norm, cmap='viridis')
+    ax.set_aspect('equal')
+
+    # Add labels for non-zero integers
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            value = matrix[i, j]
+            if value != 0 and int(value) == value:  # Label only non-zero integers
+                ax.text(j, i, f"{int(value)}", color="black", ha='center', va='center', fontsize=10)
+
+    # Add colorbar
+    cbar = plt.colorbar(im, orientation='vertical', fraction=0.046, pad=0.04)
+    # cbar.set_ticks([0.001, 1, 2, 3, 4, 5, 6])  # Set positions for integers on the log scale
+    # cbar.set_ticklabels([0, 1, 2, 3, 4, 5, 6])  # Set corresponding integer labels
+
+    # Remove y-axis labels
+    # ax.yaxis.set_visible(False)
+
+    # Save and display the figure
+    plt.savefig(name + ".svg", format="svg", bbox_inches='tight')
+    plt.show()
+
+def filterDataframe(df, alt_rounding = False, sinkhorn = False, full_skews = False, onlyhalfskew = True, cicle= True, chord=False):
+    df = df.replace(to_replace='Circle', value='Ring', regex=True)
     if(alt_rounding):
         df = df[df['Alg'] != "Rounding"]
     else:
         df = df[df['Alg'] != "Alt_Rounding"]
-
+    if(not chord):
+        df = df[df['Alg'] != "Chord"]
     
     if(not full_skews):
         skews = ["skew-8-0.2", "skew-8-0.4", "skew-8-0.6", "skew-8-0.8", "skew-16-0.2", "skew-16-0.4", "skew-16-0.6", "skew-16-0.8"]
@@ -345,22 +404,51 @@ if __name__ == "__main__":
     plotsdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/plots/"
     directory="/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
     matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    M = demandMatrix = np.loadtxt(matrixdir+"random-skewed-8"+".mat", usecols=range(8))
-    fct.filtering(M)
+    # Mname = "hybrid-parallelism"
+    # M = demandMatrix = np.loadtxt(matrixdir+Mname+".mat", usecols=range(16))
+
+
+    # dB  = np.loadtxt("Rounded.txt", usecols=range(8))
+    # dF  = np.loadtxt("RoundedRRG.txt", usecols=range(8))
+    # dRRG = np.loadtxt("RRGadded.txt", usecols=range(8))
+    # dGCM = np.loadtxt("GCMadded.txt", usecols=range(8))
+    # plot_2D_nparray(dB, name="demandBefore", vmax=6)
+    # plot_2D_nparray_with_labels(dB, name="Rounded")
+    # plot_2D_nparray_with_labels(dF, name="RoundedRRG")
+    # plot_2D_nparray_with_labels(dGCM, name="demandGCM")
+
+    
     # Load the CSV file into a DataFrame
-    df = pd.read_csv(directory +"outputFinal.csv", delim_whitespace=True, header=0)
+    # df = pd.read_csv(directory +"lastOutput.csv", delim_whitespace=True, header=0)
+    df = pd.read_csv(directory +"output2NoFloor.csv", delim_whitespace=True, header=0)
+
 
     # Display first few rows to confirm loading
 
-    # ax = sns.heatmap(renormalized_oblivious_matrix, cmap='GnBu',norm=colors.LogNorm(vmin=minVal,vmax=maxVal,clip=True),linewidths=2, cbar_kws={'ticks': ticks},vmin=minVal,vmax=maxVal)
-    #Check example-vermillion file again
-    df = df.drop(columns=df.columns[4])  # Drop irrelevant column
-    df = filterDataframe(df, sinkhorn= True, full_skews= True)
-    # # print(df.head)
-    # plot_2D_nparray(M)
-    # plot_2D_nparray(mm.Sinkhorn_Knopp(M))
+    # # ax = sns.heatmap(renormalized_oblivious_matrix, cmap='GnBu',norm=colors.LogNorm(vmin=minVal,vmax=maxVal,clip=True),linewidths=2, cbar_kws={'ticks': ticks},vmin=minVal,vmax=maxVal)
+    # #Check example-vermillion file again
+    # df = df.drop(columns=df.columns[3])
+    # df = df.drop(columns=df.columns[4])  # Drop irrelevant column
+
+    df = filterDataframe(df, sinkhorn= True, full_skews= False)
+    # print(df['throughput'])
+    initialize_styles(df)
+
+    # print(df.head)
+    # fct.filtering(M)
+    # plot_2D_nparray(M, name=Mname)
+    
+    # plot_2D_nparray(mm.Sinkhorn_Knopp(M), name=Mname + "-cleaned")
     # plot_by_matrix("Sinkhorn_heatmap3", df)
-    # avg_total_theta(df,16,10)
+    avg_total_theta(df)
+    # min_theta_by_d(8, df)
     # min_theta_by_d(16, df)
+    # avg_theta_by_d(8, df)
     # avg_theta_by_d(16, df)
-    increasing_skew(16, 8, df)
+
+    # increasing_skew(8, 3, df) 
+    # increasing_skew(8, 5, df) 
+    # increasing_skew(8, 7, df) 
+    # increasing_skew(16, 6, df) 
+    # increasing_skew(16, 10, df) 
+    # increasing_skew(16, 14, df) 

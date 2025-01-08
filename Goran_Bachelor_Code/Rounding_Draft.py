@@ -5,6 +5,21 @@ import networkx as nx
 import numpy as np
 import Throughput_as_Function as fct
 import paperCode as pc
+
+def OneRoundingIter(N, d, M, iteration):
+    if(iteration != 1.00):
+        demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
+    else: 
+        demand = np.array(M)
+    
+    dBulk = np.floor(d*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
+    dRes = d - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
+    linkCapacity = rounding(demand, N, dBulk)
+    G = nx.random_regular_graph(dRes, N)
+    fct.addGraphToMatrix(G, linkCapacity)
+
+    return(fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=False, input_graph=False))
+
 def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d; Assumes d-doubly stochastic matrix 
     model = gp.Model()
     entry_vars = {}
@@ -24,11 +39,11 @@ def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such th
         model.addConstr(gp.quicksum(entry_vars[j,i] for j in range(N) if j != i) == d)
 
     model.update()
-    const = model.addVar(vtype=GRB.INTEGER, ub=0)
-    # diff = model.addVar(vtype=GRB.CONTINUOUS, lb=-1e10 ,ub=1e10) 
-    # model.addConstr(gp.quicksum(((entry_vars[i,j] - M[i,j])*entry_vars[i,j]) for i in range(N) for j in range(N) if j != i)== diff)
+    # const = model.addVar(vtype=GRB.INTEGER, ub=0)
+    diff = model.addVar(vtype=GRB.CONTINUOUS, lb=-1e10 ,ub=1e10) 
+    model.addConstr(gp.quicksum(((entry_vars[i,j] - M[i,j])*entry_vars[i,j]) for i in range(N) for j in range(N) if j != i)== diff)
     #Justification for objective function, which is useful in this case?
-    model.setObjective(const, GRB.MAXIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
+    model.setObjective(diff, GRB.MINIMIZE) #Since this is purely a feasibility problem we optimize a constant of 0
     
     # Optimize the model
     model.optimize()
@@ -85,9 +100,7 @@ def residualRounding(M, N, rowGoals, colGoals):
 def thetaByRounding(N, d, M, RRGiter):#Returns throughput that can be achieved for given N, d and M with rounding heuristic. RRGiter determines how many RRGs you will try per iter
     iterations=[1-i*0.01 for i in range(99)]
     for iteration in iterations:
-        # print("################")
-        # print(iteration)
-        # print("################")
+
         demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
         # print(np.array2string(demand))
         # floor = np.floor(demand)
@@ -101,7 +114,32 @@ def thetaByRounding(N, d, M, RRGiter):#Returns throughput that can be achieved f
         if res == 1:
             return iteration
     return 0
+def thirdFinalRounding(N, d, M, measure_SH = False):
+    iterations=[1-i*0.01 for i in range(99)]
+    for iteration in iterations:
 
+        demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
+        # print(np.array2string(demand))
+        
+        dBulk = np.floor(d*iteration).astype(int) #dIter describes how much of the edge constraint d is reserved for meeting bulk demand in rounding phase
+        dRes = d - dBulk #dRes describes how much is left to construct a dRes-RRG to meet residual demand
+        linkCapacity = rounding(demand, N, dBulk)
+        print(linkCapacity)
+        np.savetxt('Rounded.txt', linkCapacity)
+        G = nx.random_regular_graph(dRes, N)
+        fct.addGraphToMatrix(G, linkCapacity)
+        np.savetxt('RoundedRRG.txt', linkCapacity)
+        print(linkCapacity)
+        if(measure_SH):
+            res, routed = fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=True, input_graph=False)
+            ratioSH = routed[1] / routed[0]
+            if(res ==1):
+                return (iteration, ratioSH)
+        else:
+            res = fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=False, input_graph=False)
+        if res== 1:
+            return iteration
+    return 0
 def alternativeTheta(N, d, M, RRGiter):
     iterations=[1-i*0.01 for i in range(99)]
     for iteration in iterations:
@@ -254,12 +292,12 @@ def generalized_roundingwObj(M, N):#Given M, N and d returns rounded numpy matri
 #3 Main Approaches: Conventional : thetabyRound; alternativeTheta; and altThetawGCM each with own rounding method
 
 
-# if __name__ == "__main__":
-#     N= 16
-#     dE = 8
-#     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-#     demandMatrix = np.loadtxt(workdir+"random-skewed-16.mat", usecols=range(N))
-#     fct.filtering(demandMatrix)
-#     demandMatrix = demandMatrix * dE
-#     print(altThetawGCM(N, dE, demandMatrix, 6))
+if __name__ == "__main__":
+    N= 8
+    dE = 7
+    workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    demandMatrix = np.loadtxt(workdir+"random-skewed-8.mat", usecols=range(N))
+    # fct.filtering(demandMatrix)
+    demandMatrix = demandMatrix * dE
+    print(thirdFinalRounding(N,dE, demandMatrix))
 

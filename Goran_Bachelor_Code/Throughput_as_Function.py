@@ -4,8 +4,56 @@ from gurobipy import GRB
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import matrixModification as mm
+import Floor_Draft as fd
+import Rounding_Draft as rd
+def findBestGamma(N, d, M, Rounding = False):
+    # Generate iterations list
+    iterations = [1 - i * 0.01 for i in range(99)]
+    maxTheta = 0
+    # Compute gammaTheta values
+    for iteration in iterations:
+        if(Rounding):
+            res = rd.OneRoundingIter(N, d, M, iteration)
+        else:
+            res = fd.OneFloorIter(N, d, M , iteration)
+        GT = res * iteration
+        # print("iter: ", iteration, "|res: ", res, "|GT: ", res*iteration)
+        if(GT > maxTheta):
+            maxTheta = GT
+        if(res == 1):
+            return maxTheta
 
+def addGraphToMatrix(G, C):
+    for i, j in G.edges:
+        C[i, j] += 1
+        C[j, i] += 1
+def match_and_increment(list_a, list_b, C):
+    
+    
+    N = len(list_a)
+    
+    # Continue until all entries in list_a are zero
+    while any(val > 0 for val in list_a):
+        # Randomly choose an index with a value > 0 from list_a
+        a_index = random.choice([i for i in range(N) if list_a[i] > 0])
+        
+        # Randomly choose a different index with a value > 0 from list_b
 
+        valid_b_indices = [i for i in range(N) if list_b[i] > 0 and i != a_index]
+        if not valid_b_indices:
+            # print("No valid index left in list_b to decrement with")
+            break
+        b_index = random.choice(valid_b_indices)
+        # Decrement both values at the selected indices
+        list_a[a_index] -= 1
+        list_b[b_index] -= 1
+        
+        C[a_index, b_index] +=1
+        # Print for debugging purposes (optional)
+    #     print(f"Decrementing A[{a_index}] and B[{b_index}]")
+    #     print(f"List A: {list_a}")
+    #     print(f"List B: {list_b}\n")
 
 def createResidual(M, integer): #Modifies demand matrix M such that it becomes the residual matrix
     N = M.shape[0]
@@ -134,7 +182,9 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
     
     # Optimize the model
     model.optimize()
-    
+    # for v in model.getVars():
+    #     if(v.x != 0):
+    #         print(v.varName, "=", v.x)
     if(measure_SH):
         for s in range(N):
             for d in range(N):
@@ -145,7 +195,8 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
                             if(i== s and d == j):
                                 SH_flow+= flow_variables[(i, j)][(s,d)].X
         return (throughput.X,(total_flow, SH_flow))
-
+    
+    
     return throughput.X
 
 def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
@@ -171,13 +222,15 @@ def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out 
 
 def findavgRRGtheta(M, N, d, iter):
     thetas = []
+    SH = []
     for i in range(iter):
         G_temp = nx.random_regular_graph(d,N)
-        theta = thetaEdgeFormulation(G_temp, M, N)
+        theta, routed = thetaEdgeFormulation(G_temp, M, N, measure_SH=True)
         thetas.append(theta)
+        SH.append(routed[1] / routed[0])
         # nx.draw_circular(G_temp, with_labels= True)
         # plt.show()
-    return(np.mean(thetas))
+    return(np.mean(thetas), np.mean(SH))
 def createCircleGraph(N, d):
     CircleG= nx.MultiDiGraph()#d-Strong Circle
     for i in range(N):
@@ -196,18 +249,27 @@ def createPseudoChord(N,d):
     return ChordG
 if __name__ == "__main__":
     
-    N=16
+    N=8
     dE=1
-    G = nx.random_regular_graph(dE,N)
+    G = createCircleGraph(N, dE)
 
 
 
 
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demand = np.loadtxt(workdir+"heatmap1.mat", usecols=range(N))
-    demand = demand *dE
+    demand = np.loadtxt(workdir+"skew-8-0.5.mat", usecols=range(N))
+    demand2 = np.zeros((8,8))
+    for i in range(8):
+        for j in range(8):
+            if(i == (j+1)% N):
+                demand2[i,j] = 1
+
+    print(np.array2string(demand2))
+    # filtering(demand)
+    # demand = mm.Sinkhorn_Knopp(demand)
+    demand = demand2 *dE
     # print(findavgRRGtheta(demand, N, dE, 6))
-    print(demand.sum())
+    print(thetaEdgeFormulation(G, demand, 8, measure_SH=True))
     # demand = np.zeros((N,N))
     # for i in range(N):
     #     for j in range(N):
