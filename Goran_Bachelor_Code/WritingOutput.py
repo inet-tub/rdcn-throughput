@@ -96,7 +96,7 @@ def oneIteration(N, M, matrix, RRG_Iter, outputfile):
         # print(Rounding_String)
         # outputfile.write( Rounding_String+"\n")
 
-        # circle_theta, routed = fct.thetaEdgeFormulation(fct.createCircleGraph(N,d),saturatedM, N, measure_SH=True)
+        # circle_theta, routed = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N, measure_SH=True)
         # circleString = string_Beginning + " Circle " +"NA" + " " +str(circle_theta) + " " + str(routed[1] / routed[0])
         # print(circleString)
         # outputfile.write( circleString+"\n")
@@ -138,9 +138,9 @@ if __name__ == "__main__":
 
 
     RRG_Iter = 10
-    print("N matrix d Alg RRGIter throughput\n")
+    print("N matrix d Alg throughput\n")
     outputfile = open(outputdir+"FinalRounding", "w")
-    outputfile.write("N matrix d Alg RRGIter throughput\n")
+    outputfile.write("N matrix d Alg throughput\n")
     # writePerfectTheta(16,matrices, d_lists)
     for N in n_values_used:
         matrices = generate_synthmatrix_names(N)

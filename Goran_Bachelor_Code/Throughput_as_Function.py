@@ -73,42 +73,6 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     max_sum = max(max_row_sum, max_col_sum)
     M = np.divide(M, max_sum)
     return M
-def match_and_decrement(list_a, list_b, M):
-    totalSH = 0
-    # Ensure both lists are of equal length
-    assert len(list_a) == len(list_b), "Lists must be of equal length"
-    
-    # Ensure both lists have equal sums
-    assert sum(list_a) == sum(list_b), "Lists must have equal sums"
-    
-    N = len(list_a)
-    
-    # Continue until all entries in list_a are zero
-    while any(val > 0 for val in list_a):
-        # Randomly choose an index with a value > 0 from list_a
-        a_index = random.choice([i for i in range(N) if list_a[i] > 0])
-        
-        # Randomly choose a different index with a value > 0 from list_b
-
-        valid_b_indices = [i for i in range(N) if list_b[i] > 0 and i != a_index]
-        if not valid_b_indices:
-            # print("No valid index left in list_b to decrement with")
-            break
-        b_index = random.choice(valid_b_indices)
-        # Decrement both values at the selected indices
-        list_a[a_index] -= 1
-        list_b[b_index] -= 1
-        
-        totalSH += min(max(M[a_index, b_index], 0),1)
-        M[a_index, b_index] -=1
-        # Print for debugging purposes (optional)
-    #     print(f"Decrementing A[{a_index}] and B[{b_index}]")
-    #     print(f"List A: {list_a}")
-    #     print(f"List B: {list_b}\n")
-    return totalSH
-    # print("All entries in List A have been decremented to 0.")
-
-
 
 def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given static topology G and demand matrix M, returns best throughput achievable
     model = gp.Model()
@@ -199,26 +163,6 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
     
     return throughput.X
 
-def findBestRRG(M, N, d, iter, cutoff =False): #Given denand Matrix M, test out RRGs for given nr. of iterations and return best one with throughput and in which iter found
-    best_iter = -1
-    best_theta = 0
-    best_G = None
-    for i in range(iter):
-        G_temp = nx.random_regular_graph(d,N)
-        theta = thetaEdgeFormulation(G_temp, M, N)
-        # nx.draw_circular(G_temp, with_labels= True)
-        # plt.show()
-        if cutoff:
-            if theta < 0.8:
-                return(None, 0, None)
-        if(theta > best_theta):
-            best_iter = i
-            best_G = G_temp
-            best_theta = theta
-            if(theta == 1):
-                return(best_iter, best_theta, best_G) # We'll never get better than 1 as throughput, so avoid calculation of next iterations
-        
-    return(best_iter, best_theta, best_G)
 
 def findavgRRGtheta(M, N, d, iter):
     thetas = []
@@ -228,16 +172,14 @@ def findavgRRGtheta(M, N, d, iter):
         theta, routed = thetaEdgeFormulation(G_temp, M, N, measure_SH=True)
         thetas.append(theta)
         SH.append(routed[1] / routed[0])
-        # nx.draw_circular(G_temp, with_labels= True)
-        # plt.show()
     return(np.mean(thetas), np.mean(SH))
-def createCircleGraph(N, d):
-    CircleG= nx.MultiDiGraph()#d-Strong Circle
+def createRingGraph(N, d):
+    RingG= nx.MultiDiGraph()#d-Strong Circle
     for i in range(N):
         j = (i+1) % N
         for k in range(d): 
-            keys = CircleG.add_edge(i,j)
-    return CircleG
+            RingG.add_edge(i,j)
+    return RingG
 def createPseudoChord(N,d):
     ChordG = nx.MultiDiGraph() #Pseudo-Chord network
     for i in range(N):

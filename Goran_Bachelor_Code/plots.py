@@ -420,7 +420,7 @@ if __name__ == "__main__":
     
     # Load the CSV file into a DataFrame
     # df = pd.read_csv(directory +"lastOutput.csv", delim_whitespace=True, header=0)
-    df = pd.read_csv(directory +"output2NoFloor.csv", delim_whitespace=True, header=0)
+    df = pd.read_csv(directory +"output2NoRounding.csv", delim_whitespace=True, header=0)
 
 
     # Display first few rows to confirm loading
