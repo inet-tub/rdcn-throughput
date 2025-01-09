@@ -17,12 +17,12 @@ def findBestGamma(N, d, M, Rounding = False):
             res = rd.OneRoundingIter(N, d, M, iteration)
         else:
             res = fd.OneFloorIter(N, d, M , iteration)
-        GT = res * iteration
         # print("iter: ", iteration, "|res: ", res, "|GT: ", res*iteration)
-        if(GT > maxTheta):
-            maxTheta = GT
+        if(res > maxTheta):
+            maxTheta = res
         if(res == 1):
             return maxTheta
+    return maxTheta
 
 def addGraphToMatrix(G, C):
     for i, j in G.edges:

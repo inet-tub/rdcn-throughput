@@ -13,41 +13,30 @@ def plotGamma(N, d, M):
     gammaTheta = []
     best_theta = 0
     best_iter =100
-    best_found = False
-    ret_iter = 100
     # Compute gammaTheta values
     for iteration in iterations:
         res = OneFloorIter(N, d, M, iteration)
-        GT = res * iteration
-        if(GT > best_theta):
-            best_theta = GT
+        if(res > best_theta):
+            best_theta = res
             best_iter = iteration
-        if(res == 1 and not best_found):
-            best_found = True
-            ret_iter =iteration
-            print("iter: ", iteration, "|res: ", res, "|GT: ", res*iteration, "  Best Found!")
         else:
-            print("iter: ", iteration, "|res: ", res, "|GT: ", res*iteration)
-        gammaTheta.append(GT)
+            print("iter: ", iteration, "|res: ", res)
+        gammaTheta.append(res)
     
-    # Find the index and value of the maximum gammaTheta
-    max_gammaTheta = gammaTheta[iterations.index(ret_iter)]
-
-    max_iteration = ret_iter
     
     # Plot the data
     plt.figure(figsize=(8, 6))  # Optional: Set figure size
     plt.plot(iterations, gammaTheta, color='b')
     
     # Highlight the maximum value
-    plt.scatter(ret_iter, max_gammaTheta, color='r', s=100, zorder=5, label='Return Gamma')  # Highlight with a red dot
-    plt.annotate(f'Return: {max_gammaTheta:.2f}', 
-                 xy=(max_iteration, max_gammaTheta), 
-                 xytext=(max_iteration - 0.1, max_gammaTheta + 0.05),
-                 arrowprops=dict(facecolor='red', arrowstyle='->'),
-                 fontsize=10)
-    plt.scatter(best_iter, best_theta, color='g', s=100, zorder=5, label='Best GT')  # Highlight with a green dot
-    plt.annotate(f'Best: {best_theta:.2f} In:{best_iter}', 
+    # plt.scatter(ret_iter, max_gammaTheta, color='r', s=100, zorder=5, label='Return Gamma')  # Highlight with a red dot
+    # plt.annotate(f'Return: {max_gammaTheta:.2f}', 
+    #              xy=(max_iteration, max_gammaTheta), 
+    #              xytext=(max_iteration - 0.1, max_gammaTheta + 0.05),
+    #              arrowprops=dict(facecolor='red', arrowstyle='->'),
+    #              fontsize=10)
+    plt.scatter(best_iter, best_theta, color='g', s=100, zorder=5)  # Highlight with a green dot
+    plt.annotate(f'θ*: {best_theta:.3f} With γ:{best_iter:.2f}', 
                  xy=(best_iter, best_theta), 
                  xytext=(best_iter - 0.1, best_theta + 0.05),
                  arrowprops=dict(facecolor='green', arrowstyle='->'),
@@ -55,13 +44,16 @@ def plotGamma(N, d, M):
     # Reverse the x-axis
     plt.gca().invert_xaxis()
     
+    plt.axhline(y=0.8363289560560487, color='green', linestyle='--', linewidth=1, label='Optimal Throughput')
+    plt.axhline(y=0.44475453191253356, color='red', linestyle='--', linewidth=1, label='RRG Avg Throughput')
     # Add labels and title
-    plt.xlabel('Iterations')
-    plt.ylabel('Gamma x Theta')
+    plt.xlabel('Gamma', fontsize=20)
+    plt.ylabel('Throughput achieved',fontsize=20)
+    plt.ylim(0,1)
     # plt.title('GammaTheta vs Iterations')
     plt.grid(True)  # Optional: Add grid lines
     plt.legend()  # Optional: Add a legend
-    
+    plt.savefig(f"FloorThetaEvo.svg", format="svg", dpi=300)
     # Show the plot
     plt.show()
 def OneFloorIter(N, d, M, iteration):#Returns throughput that can be achieved for given N, d and M with floor heuristic. RRGiter determines how many RRGs you will try per iter
@@ -98,7 +90,7 @@ def OneFloorIter(N, d, M, iteration):#Returns throughput that can be achieved fo
     fct.addGraphToMatrix(G, linkCapacity)
     fct.match_and_increment(outLeft, inLeft, linkCapacity)
     # print(linkCapacity)
-    res = fct.thetaEdgeFormulation(linkCapacity, demand, N, input_graph=False)
+    res = fct.thetaEdgeFormulation(linkCapacity, M, N, input_graph=False)
     return res
 
 
@@ -139,10 +131,10 @@ def ThetaByFloor(N, d, M, measure_SH = False):#Returns throughput that can be ac
     return 0
 if __name__ == "__main__":
 
-    N= 8
-    dE = 7
+    N= 16
+    dE = 6
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(workdir+"random-skewed-8.mat", usecols=range(8))
+    demandMatrix = np.loadtxt(workdir+"skew-16-0.9.mat", usecols=range(N))
     # fct.filtering(demandMatrix)
     # demandMatrix = fct.return_normalized_matrix(demandMatrix)
     demandMatrix = demandMatrix * dE

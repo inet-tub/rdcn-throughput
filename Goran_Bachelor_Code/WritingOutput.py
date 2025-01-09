@@ -56,7 +56,7 @@ def findRoundingAvg(M, N, d, iter):
         # nx.draw_circular(G_temp, with_labels= True)
         # plt.show()
     return(np.mean(thetas), np.mean(SH))
-def oneIteration(N, M, matrix, RRG_Iter, outputfile):
+def oneIteration(N, M, matrix, outputfile):
     if(matrix in organicmatrices16):
         fct.filtering(M)
         M = mm.Sinkhorn_Knopp(M)
@@ -69,8 +69,8 @@ def oneIteration(N, M, matrix, RRG_Iter, outputfile):
         string_Beginning = str(N) +" "+ matrix +" " + str(d)
 
 
-        # (RRG_theta, RRG_SH) =  fct.findavgRRGtheta(saturatedM, N, d, RRG_Iter)
-        # RRG_string = string_Beginning + " RRG "+ str(RRG_Iter) + " " +str(RRG_theta) + " " + str(RRG_SH)
+        # (RRG_theta, RRG_SH) =  fct.findavgRRGtheta(saturatedM, N, d, 10)
+        # RRG_string = string_Beginning + " RRG " + " " +str(RRG_theta)
         # print(RRG_string)
         # outputfile.write(RRG_string+"\n")
 
@@ -79,32 +79,16 @@ def oneIteration(N, M, matrix, RRG_Iter, outputfile):
         print(Floor_String)
         outputfile.write( Floor_String+"\n")
 
-        # old_Rounding_theta = rd.thetaByRounding(N, d, saturatedM, RRG_Iter)
-        # old_Rounding_String =string_Beginning +  " Old_Rounding " + "NA" +" " + str(old_Rounding_theta)
-        # print(old_Rounding_String)
-        # outputfile.write(old_Rounding_String+"\n")
-
-
         Rounding_theta =  fct.findBestGamma(N, d, saturatedM, Rounding=True)
         Rounding_String =f"{string_Beginning} Rounding {Rounding_theta:.5f}"
         print(Rounding_String)
         outputfile.write( Rounding_String+"\n")
-
-
-        # alt_Rounding_theta = rd.alternativeTheta(N, d, saturatedM, RRG_Iter)
-        # Rounding_String =string_Beginning +  " Alt_Rounding " + "NA" +" " + str(alt_Rounding_theta)
-        # print(Rounding_String)
-        # outputfile.write( Rounding_String+"\n")
 
         # circle_theta, routed = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N, measure_SH=True)
         # circleString = string_Beginning + " Circle " +"NA" + " " +str(circle_theta) + " " + str(routed[1] / routed[0])
         # print(circleString)
         # outputfile.write( circleString+"\n")
 
-        # chord_theta = fct.thetaEdgeFormulation(fct.createPseudoChord(N,d), saturatedM, N)
-        # chordString = string_Beginning + " Chord " +"NA" + " " +str(chord_theta)
-        # print(chordString)
-        # outputfile.write( chordString+"\n")
 
 # def writePerfectTheta(N, matrices, d_lists):
 #     for i in range(len(matrices)):
@@ -137,7 +121,6 @@ if __name__ == "__main__":
 
 
 
-    RRG_Iter = 10
     print("N matrix d Alg throughput\n")
     outputfile = open(outputdir+"FinalRounding", "w")
     outputfile.write("N matrix d Alg throughput\n")
@@ -153,4 +136,4 @@ if __name__ == "__main__":
             # if(matrix in organicmatrices16):
             #     demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
             #     matrix = "Sinkhorn_" + matrix
-            oneIteration(N, demandMatrix, matrix, RRG_Iter, outputfile)
+            oneIteration(N, demandMatrix, matrix, outputfile)

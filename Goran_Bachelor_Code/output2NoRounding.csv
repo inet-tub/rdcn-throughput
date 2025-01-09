@@ -633,7 +633,7 @@ N matrix d Alg throughput
 8 skew-8-0.1 5 Rounding 0.78378
 8 skew-8-0.1 6 Floor 0.83460
 8 skew-8-0.1 6 Rounding 0.85784
-8 skew-8-0.1 7 Floor 0.89783
+8 skew-8-0.1 7 Floor 0.93023
 8 skew-8-0.1 7 Rounding 0.93023
 8 skew-8-0.2 2 Floor 0.46875
 8 skew-8-0.2 2 Rounding 0.51170
@@ -818,7 +818,7 @@ N matrix d Alg throughput
 16 uniform-16 4 Floor 0.52326
 16 uniform-16 4 Rounding 0.50247
 16 uniform-16 6 Floor 0.62185
-16 uniform-16 6 Rounding 0.57325
+16 uniform-16 6 Rounding 0.59614
 16 uniform-16 8 Floor 0.68182
 16 uniform-16 8 Rounding 0.68182
 16 uniform-16 10 Floor 0.75000

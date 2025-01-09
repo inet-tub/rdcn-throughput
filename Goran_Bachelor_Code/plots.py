@@ -376,14 +376,9 @@ def plot_2D_nparray_with_labels(matrix, vmin=1e-3, vmax=6, name="2Darray"):
     plt.savefig(name + ".svg", format="svg", bbox_inches='tight')
     plt.show()
 
-def filterDataframe(df, alt_rounding = False, sinkhorn = False, full_skews = False, onlyhalfskew = True, cicle= True, chord=False):
+def filterDataframe(df, sinkhorn = False, full_skews = False, onlyhalfskew = True):
     df = df.replace(to_replace='Circle', value='Ring', regex=True)
-    if(alt_rounding):
-        df = df[df['Alg'] != "Rounding"]
-    else:
-        df = df[df['Alg'] != "Alt_Rounding"]
-    if(not chord):
-        df = df[df['Alg'] != "Chord"]
+
     
     if(not full_skews):
         skews = ["skew-8-0.2", "skew-8-0.4", "skew-8-0.6", "skew-8-0.8", "skew-16-0.2", "skew-16-0.4", "skew-16-0.6", "skew-16-0.8"]
@@ -430,8 +425,7 @@ if __name__ == "__main__":
     # df = df.drop(columns=df.columns[3])
     # df = df.drop(columns=df.columns[4])  # Drop irrelevant column
 
-    df = filterDataframe(df, sinkhorn= True, full_skews= False)
-    # print(df['throughput'])
+    df = filterDataframe(df, sinkhorn= True, full_skews= True)
     initialize_styles(df)
 
     # print(df.head)
@@ -440,15 +434,15 @@ if __name__ == "__main__":
     
     # plot_2D_nparray(mm.Sinkhorn_Knopp(M), name=Mname + "-cleaned")
     # plot_by_matrix("Sinkhorn_heatmap3", df)
-    avg_total_theta(df)
+    # avg_total_theta(df)
     # min_theta_by_d(8, df)
     # min_theta_by_d(16, df)
     # avg_theta_by_d(8, df)
     # avg_theta_by_d(16, df)
 
-    # increasing_skew(8, 3, df) 
-    # increasing_skew(8, 5, df) 
-    # increasing_skew(8, 7, df) 
-    # increasing_skew(16, 6, df) 
-    # increasing_skew(16, 10, df) 
-    # increasing_skew(16, 14, df) 
+    increasing_skew(8, 3, df) 
+    increasing_skew(8, 5, df) 
+    increasing_skew(8, 7, df) 
+    increasing_skew(16, 6, df) 
+    increasing_skew(16, 10, df) 
+    increasing_skew(16, 14, df) 

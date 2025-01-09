@@ -5,7 +5,66 @@ import networkx as nx
 import numpy as np
 import Throughput_as_Function as fct
 import paperCode as pc
+import matplotlib.pyplot as plt
+def plotGamma(N, d, M):
+    # Generate iterations list
+    iterations = [1 - i * 0.01 for i in range(99)]
+    gammaTheta = []
+    best_theta = 0
+    best_iter =100
+    best_found = False
+    ret_iter = 100
+    # Compute gammaTheta values
+    for iteration in iterations:
+        res = OneRoundingIter(N, d, M, iteration)
+        GT = res
+        if(GT > best_theta):
+            best_theta = GT
+            best_iter = iteration
+        if(res > iteration and not best_found):
+            best_found = True
+            ret_iter =iteration
+            print("iter: ", iteration, "|res: ", res, "  Best Found!")
+        else:
+            print("iter: ", iteration, "|res: ", res)
+        gammaTheta.append(GT)
+    
+    # Find the index and value of the maximum gammaTheta
+    max_gammaTheta = gammaTheta[iterations.index(ret_iter)]
 
+    max_iteration = ret_iter
+    
+    # Plot the data
+    plt.figure(figsize=(8, 6))  # Optional: Set figure size
+    plt.plot(iterations, gammaTheta, color='b')
+    
+    # Highlight the maximum value
+    plt.scatter(ret_iter, max_gammaTheta, color='r', s=100, zorder=5, label='Return Gamma')  # Highlight with a red dot
+    plt.annotate(f'Return: {max_gammaTheta:.2f}', 
+                 xy=(max_iteration, max_gammaTheta), 
+                 xytext=(max_iteration - 0.1, max_gammaTheta + 0.05),
+                 arrowprops=dict(facecolor='red', arrowstyle='->'),
+                 fontsize=10)
+    plt.scatter(best_iter, best_theta, color='g', s=100, zorder=5, label='Best GT')  # Highlight with a green dot
+    plt.annotate(f'Best: {best_theta:.2f} In:{best_iter}', 
+                 xy=(best_iter, best_theta), 
+                 xytext=(best_iter - 0.1, best_theta + 0.05),
+                 arrowprops=dict(facecolor='green', arrowstyle='->'),
+                 fontsize=10)
+    # Reverse the x-axis
+    plt.gca().invert_xaxis()
+    plt.ylim(0,1)
+    plt.axhline(y=0.8591644204851754, color='green', linestyle='--', linewidth=1, label='Optimal Throughput')
+    plt.axhline(y=0.8085981210369265, color='red', linestyle='--', linewidth=1, label='RRG Avg Throughput')
+    # Add labels and title
+    plt.xlabel('Iterations')
+    plt.ylabel('Gamma x Theta')
+    # plt.title('GammaTheta vs Iterations')
+    plt.grid(True)  # Optional: Add grid lines
+    plt.legend()  # Optional: Add a legend
+    
+    # Show the plot
+    plt.show()
 def OneRoundingIter(N, d, M, iteration):
     if(iteration != 1.00):
         demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
@@ -18,7 +77,7 @@ def OneRoundingIter(N, d, M, iteration):
     G = nx.random_regular_graph(dRes, N)
     fct.addGraphToMatrix(G, linkCapacity)
 
-    return(fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=False, input_graph=False))
+    return(fct.thetaEdgeFormulation(linkCapacity, M, N, measure_SH=False, input_graph=False))
 
 def rounding(M, N, d):#Given M, N and d returns rounded numpy matrix sol such that sum of all rows and all columns of sol equal to function parameter d; Assumes d-doubly stochastic matrix 
     model = gp.Model()
@@ -84,11 +143,24 @@ def thirdFinalRounding(N, d, M, measure_SH = False):
 
 
 if __name__ == "__main__":
-    N= 8
-    dE = 7
+
+    N= 16
+    dE = 14
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(workdir+"random-skewed-8.mat", usecols=range(N))
+    demandMatrix = np.loadtxt(workdir+"skew-16-0.2.mat", usecols=range(N))
     # fct.filtering(demandMatrix)
+    # demandMatrix = fct.return_normalized_matrix(demandMatrix)
     demandMatrix = demandMatrix * dE
-    print(thirdFinalRounding(N,dE, demandMatrix))
+    # start = time.time()
+
+
+    # plotGamma(8,dE, demandMatrix)
+    print(plotGamma(N, dE, demandMatrix))
+    # N= 8
+    # dE = 7
+    # workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    # demandMatrix = np.loadtxt(workdir+"random-skewed-8.mat", usecols=range(N))
+    # # fct.filtering(demandMatrix)
+    # demandMatrix = demandMatrix * dE
+    # print(thirdFinalRounding(N,dE, demandMatrix))
 
