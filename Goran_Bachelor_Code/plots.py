@@ -87,7 +87,7 @@ def increasing_skew(N, d, df):
     )
     plt.xlabel("")
     plt.ylabel("Throughput")
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45, fontsize=20)
     plt.grid(color='grey', linestyle='-', linewidth=2, alpha=0.6)
     # ax.set_ylim(0.1,1.1)
     # ax.set_yscale("log")
@@ -376,11 +376,11 @@ def plot_2D_nparray_with_labels(matrix, vmin=1e-3, vmax=6, name="2Darray"):
     plt.savefig(name + ".svg", format="svg", bbox_inches='tight')
     plt.show()
 
-def filterDataframe(df, sinkhorn = False, full_skews = False, onlyhalfskew = True):
+def filterDataframe(df, sinkhorn = False, full_skews = False, onlyhalfskew = True):#Filters DataFrame
     df = df.replace(to_replace='Circle', value='Ring', regex=True)
 
     
-    if(not full_skews):
+    if(not full_skews): #For evaluation of averages we left full_skews=False and for everything else we put =True
         skews = ["skew-8-0.2", "skew-8-0.4", "skew-8-0.6", "skew-8-0.8", "skew-16-0.2", "skew-16-0.4", "skew-16-0.6", "skew-16-0.8"]
         df = df[~df['matrix'].isin(skews)]
         if(onlyhalfskew):#Filter everything but skew-16-0.5
@@ -415,7 +415,7 @@ if __name__ == "__main__":
     
     # Load the CSV file into a DataFrame
     # df = pd.read_csv(directory +"lastOutput.csv", delim_whitespace=True, header=0)
-    df = pd.read_csv(directory +"output2NoRounding.csv", delim_whitespace=True, header=0)
+    df = pd.read_csv(directory +"ThesisData.csv", delim_whitespace=True, header=0)
 
 
     # Display first few rows to confirm loading
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     # df = df.drop(columns=df.columns[3])
     # df = df.drop(columns=df.columns[4])  # Drop irrelevant column
 
-    df = filterDataframe(df, sinkhorn= True, full_skews= True)
+    df = filterDataframe(df, sinkhorn= True, full_skews= False)
     initialize_styles(df)
 
     # print(df.head)
@@ -437,12 +437,12 @@ if __name__ == "__main__":
     # avg_total_theta(df)
     # min_theta_by_d(8, df)
     # min_theta_by_d(16, df)
-    # avg_theta_by_d(8, df)
-    # avg_theta_by_d(16, df)
+    avg_theta_by_d(8, df)
+    avg_theta_by_d(16, df)
 
-    increasing_skew(8, 3, df) 
-    increasing_skew(8, 5, df) 
-    increasing_skew(8, 7, df) 
-    increasing_skew(16, 6, df) 
-    increasing_skew(16, 10, df) 
-    increasing_skew(16, 14, df) 
+    # increasing_skew(8, 3, df) 
+    # increasing_skew(8, 5, df) 
+    # increasing_skew(8, 7, df) 
+    # increasing_skew(16, 6, df) 
+    # increasing_skew(16, 10, df) 
+    # increasing_skew(16, 14, df) 

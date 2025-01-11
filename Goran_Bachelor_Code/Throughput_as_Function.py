@@ -7,6 +7,77 @@ import matplotlib.pyplot as plt
 import matrixModification as mm
 import Floor_Draft as fd
 import Rounding_Draft as rd
+import pandas as pd
+directory="/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
+organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
+def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration
+    if(matrix in organicmatrices16):
+        matrix = "Sinkhorn_" + matrix
+    print(N, d, matrix, Alg)
+    data = pd.read_csv(directory +'ThesisData.csv', sep=' ')
+    filtered_data = data[
+    (data['N'] == N) &
+    (data['d'] == d) &
+    (data['matrix'] == matrix) &
+    (data['Alg'] == Alg)
+    ]
+
+    # Retrieve the throughput value
+    if not filtered_data.empty:
+        throughput = filtered_data['throughput'].iloc[0]
+        print(f'Throughput: {throughput} for Alg: {Alg}')
+
+        return float(throughput)
+    else:
+        print('No matching data found.')
+def plotGamma(N, d, M, matrix, Rounding = False):
+    # Generate iterations list
+    iterations = [1 - i * 0.01 for i in range(99)]
+    gammaTheta = []
+    best_theta = 0
+    best_iter =100
+    # Compute gammaTheta values
+    for iteration in iterations:
+        if(Rounding):
+            res = rd.OneRoundingIter(N, d, M, iteration)
+        else:
+            res = fd.OneFloorIter(N, d, M, iteration)
+        if(res > best_theta):
+            best_theta = res
+            best_iter = iteration
+        print("iter: ", iteration, "|res: ", res)
+        gammaTheta.append(res)
+    
+    
+    # Plot the data
+    plt.figure(figsize=(8, 6))  # Optional: Set figure size
+    plt.plot(iterations, gammaTheta, color='b')
+    
+    plt.scatter(best_iter, best_theta, color='g', s=100, zorder=5)  # Highlight θ* with a green dot
+    plt.annotate(f'θ*: {best_theta:.3f} With γ:{best_iter:.2f}', 
+                 xy=(best_iter, best_theta), 
+                 xytext=(best_iter - 0.1, best_theta + 0.05),
+                 arrowprops=dict(facecolor='green', arrowstyle='->'),
+                 fontsize=16)
+    # Reverse the x-axis
+    plt.gca().invert_xaxis()
+    
+    plt.axhline(y=findThroughput(N,d,matrix, "Optimal"), color='green', linestyle='--', linewidth=1, label='Optimal Throughput')
+    plt.axhline(y=findThroughput(N,d,matrix, "RRG"), color='red', linestyle='--', linewidth=1, label='RRG Avg Throughput')
+    # Add labels and title
+    plt.xlabel('Gamma', fontsize=20)
+    plt.ylabel('Throughput',fontsize=20)
+    plt.tick_params(axis='both', labelsize=16)  # Increase both x and y tick size
+    plt.ylim(0,1.05)
+    # plt.title('GammaTheta vs Iterations')
+    plt.grid(True)  # Optional: Add grid lines
+    plt.legend(fontsize=20)  # Optional: Add a legend
+    if(Rounding):
+        plt.savefig(f"RTE"+matrix+str(d)+".svg", format="svg", dpi=300)
+    else:
+        plt.savefig(f"FTE"+matrix+str(d)+".svg", format="svg", dpi=300)
+    # Show the plot
+    plt.show()
 def findBestGamma(N, d, M, Rounding = False):
     # Generate iterations list
     iterations = [1 - i * 0.01 for i in range(99)]
@@ -17,7 +88,7 @@ def findBestGamma(N, d, M, Rounding = False):
             res = rd.OneRoundingIter(N, d, M, iteration)
         else:
             res = fd.OneFloorIter(N, d, M , iteration)
-        # print("iter: ", iteration, "|res: ", res, "|GT: ", res*iteration)
+        # print("iter: ", iteration, "|res: ", res)
         if(res > maxTheta):
             maxTheta = res
         if(res == 1):
@@ -55,16 +126,8 @@ def match_and_increment(list_a, list_b, C):
     #     print(f"List A: {list_a}")
     #     print(f"List B: {list_b}\n")
 
-def createResidual(M, integer): #Modifies demand matrix M such that it becomes the residual matrix
-    N = M.shape[0]
-    for i in range(N):
-        for j in range(N):
-            if i !=j:
-                M[i,j] = M[i,j]-round(integer[i,j]) #No np.max with 0, we can use negative value to determine how much capacity direct edge btwn i and j has left in rounding heuristic
-
 import random
 def filtering(M, eps=1e-5):
-    # print("_________________________________________________")
     M[M < eps] = 0
     np.fill_diagonal(M, 0)
 def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scalar which is the biggest row or col sum; Afterwards every row/col sum leq 1 
@@ -80,9 +143,6 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
     model.Params.LogToConsole = 0
     total_flow =0
     SH_flow = 0
-    # model.Params.OptimalityTol = 1e-9
-    # model.Params.FeasibilityTol = 1e-9
-    # model.Params.IntFeasTol = 1e-9
     if input_graph:
         for i in range(N):
             for j in range(N):
@@ -166,13 +226,13 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
 
 def findavgRRGtheta(M, N, d, iter):
     thetas = []
-    SH = []
+    # SH = []
     for i in range(iter):
         G_temp = nx.random_regular_graph(d,N)
-        theta, routed = thetaEdgeFormulation(G_temp, M, N, measure_SH=True)
+        theta = thetaEdgeFormulation(G_temp, M, N, measure_SH=False)
         thetas.append(theta)
-        SH.append(routed[1] / routed[0])
-    return(np.mean(thetas), np.mean(SH))
+        # SH.append(routed[1] / routed[0])
+    return np.mean(thetas)
 def createRingGraph(N, d):
     RingG= nx.MultiDiGraph()#d-Strong Circle
     for i in range(N):
@@ -180,20 +240,11 @@ def createRingGraph(N, d):
         for k in range(d): 
             RingG.add_edge(i,j)
     return RingG
-def createPseudoChord(N,d):
-    ChordG = nx.MultiDiGraph() #Pseudo-Chord network
-    for i in range(N):
-        for k in range(d):
-            j = (i+ 2**k)%N
-            if(i == j): #Loop edges don't help us, so we add them somewhere else
-                j = (j+1) % N
-            key = ChordG.add_edge(i,j)
-    return ChordG
 if __name__ == "__main__":
     
     N=8
     dE=1
-    G = createCircleGraph(N, dE)
+    G = createRingGraph(N, dE)
 
 
 

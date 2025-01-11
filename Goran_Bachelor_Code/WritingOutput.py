@@ -7,8 +7,9 @@ import Throughput_as_Function as fct
 import Floor_Draft as fd
 import Rounding_Draft as rd
 import EVariable as ev
-import sys
 import matrixModification as mm
+
+#This file was used to generate the results for all algorithms and print them out in the console and a text file
 
 def generate_synthmatrix_names(N):
     res = [
@@ -36,26 +37,6 @@ matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
 outputdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
 n_values_used = [8,16]
 d_s = [2,3,4,5,6,7]
-def findFloorAvg(M, N, d, iter):
-    thetas = []
-    SH = []
-    for i in range(iter):
-        (Floor_theta, Floor_SH) = fd.altThetaByFloor(N,d,M, measure_SH=True)
-        thetas.append(Floor_theta)
-        SH.append(Floor_SH)
-        # nx.draw_circular(G_temp, with_labels= True)
-        # plt.show()
-    return(np.mean(thetas), np.mean(SH))
-def findRoundingAvg(M, N, d, iter):
-    thetas = []
-    SH = []
-    for i in range(iter):
-        Rounding_theta, Rounding_SH = rd.thirdFinalRounding(N, d, M, measure_SH=True)
-        thetas.append(Rounding_theta)
-        SH.append(Rounding_SH)
-        # nx.draw_circular(G_temp, with_labels= True)
-        # plt.show()
-    return(np.mean(thetas), np.mean(SH))
 def oneIteration(N, M, matrix, outputfile):
     if(matrix in organicmatrices16):
         fct.filtering(M)
@@ -69,7 +50,7 @@ def oneIteration(N, M, matrix, outputfile):
         string_Beginning = str(N) +" "+ matrix +" " + str(d)
 
 
-        # (RRG_theta, RRG_SH) =  fct.findavgRRGtheta(saturatedM, N, d, 10)
+        RRG_theta =  fct.findavgRRGtheta(saturatedM, N, d, 10)
         # RRG_string = string_Beginning + " RRG " + " " +str(RRG_theta)
         # print(RRG_string)
         # outputfile.write(RRG_string+"\n")
@@ -84,8 +65,8 @@ def oneIteration(N, M, matrix, outputfile):
         print(Rounding_String)
         outputfile.write( Rounding_String+"\n")
 
-        # circle_theta, routed = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N, measure_SH=True)
-        # circleString = string_Beginning + " Circle " +"NA" + " " +str(circle_theta) + " " + str(routed[1] / routed[0])
+        # circle_theta, routed = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N)
+        # circleString = string_Beginning + " Circle " +  +str(circle_theta)
         # print(circleString)
         # outputfile.write( circleString+"\n")
 

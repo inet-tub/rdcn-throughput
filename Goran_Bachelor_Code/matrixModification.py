@@ -10,7 +10,7 @@ def generate_doubly_stochastic_matrix(N, min_val=1e-3, max_val=0.9,alpha =0.1, b
     return(Sinkhorn_Knopp(matrix))
 
 
-def Sinkhorn_Knopp(matrix , max_iters=10000, tol=1e-12):
+def Sinkhorn_Knopp(matrix , max_iters=10000, tol=1e-12): #Normalizes a matrix to be doubly-stochastic using the Sinkhorn-Knopp algorithm
     for _ in range(max_iters):
         # Normalize rows
         row_sums = matrix.sum(axis=1)

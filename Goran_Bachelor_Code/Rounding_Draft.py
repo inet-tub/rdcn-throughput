@@ -12,39 +12,23 @@ def plotGamma(N, d, M):
     gammaTheta = []
     best_theta = 0
     best_iter =100
-    best_found = False
-    ret_iter = 100
     # Compute gammaTheta values
     for iteration in iterations:
         res = OneRoundingIter(N, d, M, iteration)
-        GT = res
-        if(GT > best_theta):
-            best_theta = GT
+
+        if(res > best_theta):
+            best_theta = res
             best_iter = iteration
-        if(res > iteration and not best_found):
-            best_found = True
-            ret_iter =iteration
-            print("iter: ", iteration, "|res: ", res, "  Best Found!")
         else:
             print("iter: ", iteration, "|res: ", res)
-        gammaTheta.append(GT)
+        gammaTheta.append(res)
     
     # Find the index and value of the maximum gammaTheta
-    max_gammaTheta = gammaTheta[iterations.index(ret_iter)]
-
-    max_iteration = ret_iter
     
     # Plot the data
     plt.figure(figsize=(8, 6))  # Optional: Set figure size
     plt.plot(iterations, gammaTheta, color='b')
     
-    # Highlight the maximum value
-    plt.scatter(ret_iter, max_gammaTheta, color='r', s=100, zorder=5, label='Return Gamma')  # Highlight with a red dot
-    plt.annotate(f'Return: {max_gammaTheta:.2f}', 
-                 xy=(max_iteration, max_gammaTheta), 
-                 xytext=(max_iteration - 0.1, max_gammaTheta + 0.05),
-                 arrowprops=dict(facecolor='red', arrowstyle='->'),
-                 fontsize=10)
     plt.scatter(best_iter, best_theta, color='g', s=100, zorder=5, label='Best GT')  # Highlight with a green dot
     plt.annotate(f'Best: {best_theta:.2f} In:{best_iter}', 
                  xy=(best_iter, best_theta), 
@@ -147,7 +131,7 @@ if __name__ == "__main__":
     N= 16
     dE = 14
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demandMatrix = np.loadtxt(workdir+"skew-16-0.2.mat", usecols=range(N))
+    demandMatrix = np.loadtxt(workdir+"chessboard-16.mat", usecols=range(N))
     # fct.filtering(demandMatrix)
     # demandMatrix = fct.return_normalized_matrix(demandMatrix)
     demandMatrix = demandMatrix * dE
