@@ -1,8 +1,4 @@
-import gurobipy as gp
-from gurobipy import GRB
-import networkx as nx
 import numpy as np
-import random_Matrices as rM
 import Throughput_as_Function as fct
 import Floor_Draft as fd
 import Rounding_Draft as rd
@@ -51,9 +47,9 @@ def oneIteration(N, M, matrix, outputfile):
 
 
         RRG_theta =  fct.findavgRRGtheta(saturatedM, N, d, 10)
-        # RRG_string = string_Beginning + " RRG " + " " +str(RRG_theta)
-        # print(RRG_string)
-        # outputfile.write(RRG_string+"\n")
+        RRG_string = string_Beginning + " RRG " + " " +str(RRG_theta)
+        print(RRG_string)
+        outputfile.write(RRG_string+"\n")
 
         Floor_theta = fct.findBestGamma(N, d, saturatedM)
         Floor_String =  f"{string_Beginning} Floor {Floor_theta:.5f}"
@@ -65,10 +61,10 @@ def oneIteration(N, M, matrix, outputfile):
         print(Rounding_String)
         outputfile.write( Rounding_String+"\n")
 
-        # circle_theta = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N)
-        # circleString = string_Beginning + " Circle " +  +str(circle_theta)
-        # print(circleString)
-        # outputfile.write( circleString+"\n")
+        circle_theta = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N)
+        circleString = string_Beginning + " Circle " +  str(circle_theta)
+        print(circleString)
+        outputfile.write( circleString+"\n")
 
 
 def writePerfectTheta(N, matrices, d_lists):#For a given list of matrices and corresponding lists of values for d, print Optimal throughput and SH share
@@ -93,7 +89,6 @@ def writePerfectTheta(N, matrices, d_lists):#For a given list of matrices and co
 
 if __name__ == "__main__":
     # all_ds = [4,6,8,10,12,14]
-    # # oned= [2]
     # matrices = ["skew-16-0.5", "skew-16-0.7", "skew-16-0.3"] 
     # d_lists = [all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds,all_ds, all_ds, all_ds, all_ds]
 
@@ -105,7 +100,6 @@ if __name__ == "__main__":
     print("N matrix d Alg throughput\n")
     outputfile = open(outputdir+"TestOutput", "w")
     outputfile.write("N matrix d Alg throughput\n")
-    # writePerfectTheta(16,matrices, d_lists)
     for N in n_values_used:
         matrices = generate_synthmatrix_names(N)
         if(N == 16):
@@ -114,7 +108,4 @@ if __name__ == "__main__":
             demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
             fct.filtering(demandMatrix)
             demandMatrix = fct.return_normalized_matrix(demandMatrix)
-            # if(matrix in organicmatrices16):
-            #     demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
-            #     matrix = "Sinkhorn_" + matrix
             oneIteration(N, demandMatrix, matrix, outputfile)
