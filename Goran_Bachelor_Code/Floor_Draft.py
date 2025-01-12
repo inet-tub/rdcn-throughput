@@ -7,10 +7,10 @@ import Throughput_as_Function as fct
 import matplotlib.pyplot as plt
 import pandas as pd
 import matrixModification as mm
-def OneFloorIter(N, d, M, iteration):#Returns throughput that can be achieved for given N, d and M with floor heuristic. RRGiter determines how many RRGs you will try per iter
+def OneFloorIter(N, d, M, gamma):#Returns throughput that can be achieved for given N, d and M with floor heuristic. RRGiter determines how many RRGs you will try per iter
     # print(M)
-    if(iteration != 1.00):
-        demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
+    if(gamma != 1.00):
+        demand = M*gamma #scale down M (demandMatrix) by factor theta (gamma)
     else: 
         demand = np.array(M)
     # np.savetxt('demandBefore.txt', demand)
@@ -47,12 +47,12 @@ def OneFloorIter(N, d, M, iteration):#Returns throughput that can be achieved fo
 
 def ThetaByFloor(N, d, M, measure_SH = False):#Returns throughput that can be achieved for given N, d and M with floor heuristic. RRGiter determines how many RRGs you will try per iter
     iterations=[1-i*0.01 for i in range(99)]
-    for iteration in iterations:
+    for gamma in iterations:
 
 
     
-        if(iteration != 1.00):
-            demand = M*iteration #scale down M (demandMatrix) by factor theta (iteration)
+        if(gamma != 1.00):
+            demand = M*gamma #scale down M (demandMatrix) by factor theta (gamma)
         else: 
             demand = np.array(M)
         linkCapacity = np.floor(demand) #FloorMatrix
@@ -74,11 +74,11 @@ def ThetaByFloor(N, d, M, measure_SH = False):#Returns throughput that can be ac
             res, routed = fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=True, input_graph=False)
             ratioSH = routed[1] / routed[0]
             if(res ==1):
-                return (iteration, ratioSH)
+                return (gamma, ratioSH)
         else:
             res = fct.thetaEdgeFormulation(linkCapacity, demand, N, measure_SH=False, input_graph=False)
         if res== 1:
-            return iteration
+            return gamma
     return 0
 if __name__ == "__main__":
     matrixname= "skew-16-0.2"
@@ -87,22 +87,19 @@ if __name__ == "__main__":
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
     demandMatrix = np.loadtxt(workdir+matrixname+".mat", usecols=range(N))
     demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
-    # fct.filtering(demandMatrix)
-    # demandMatrix = fct.return_normalized_matrix(demandMatrix)
     demandMatrix = demandMatrix * dE
-    # start = time.time()
+    print(fct.plotGamma(N, dE, demandMatrix, matrixname))
 
 
     # plotGamma(8,dE, demandMatrix)
 
     # findThroughput(16,14,matrixname, "Optimal")
 
-    print(fct.plotGamma(N, dE, demandMatrix, matrixname))
+    
 
     # print(OneFloorIter(8, dE, demandMatrix, 0.7))
 
     # end = time.time()
     # length = end - start
     # print(length)
-    # plotGamma(N, dE, demandMatrix)
 

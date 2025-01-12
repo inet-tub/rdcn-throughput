@@ -1,4 +1,3 @@
-#In this file I play around with static topologies and functions which determine the throughput they achieve
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
@@ -8,9 +7,12 @@ import matrixModification as mm
 import Floor_Draft as fd
 import Rounding_Draft as rd
 import pandas as pd
+
+#This file contains all kinds of useful functions; Most importantly calculating throughput for a given topology and M
+
 directory="/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
-def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration
+def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration; used as an auxiliary for plotGamma
     if(matrix in organicmatrices16):
         matrix = "Sinkhorn_" + matrix
     print(N, d, matrix, Alg)
@@ -30,22 +32,22 @@ def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration
         return float(throughput)
     else:
         print('No matching data found.')
-def plotGamma(N, d, M, matrix, Rounding = False):
+def plotGamma(N, d, M, matrix, Rounding = False): #Used for Figure 10
     # Generate iterations list
     iterations = [1 - i * 0.01 for i in range(99)]
     gammaTheta = []
     best_theta = 0
     best_iter =100
-    # Compute gammaTheta values
-    for iteration in iterations:
+    # Compute throughput values
+    for gamma in iterations:
         if(Rounding):
-            res = rd.OneRoundingIter(N, d, M, iteration)
+            res = rd.OneRoundingIter(N, d, M, gamma)
         else:
-            res = fd.OneFloorIter(N, d, M, iteration)
+            res = fd.OneFloorIter(N, d, M, gamma)
         if(res > best_theta):
             best_theta = res
-            best_iter = iteration
-        print("iter: ", iteration, "|res: ", res)
+            best_iter = gamma
+        print("iter: ", gamma, "|res: ", res)
         gammaTheta.append(res)
     
     
@@ -82,24 +84,24 @@ def findBestGamma(N, d, M, Rounding = False):
     # Generate iterations list
     iterations = [1 - i * 0.01 for i in range(99)]
     maxTheta = 0
-    # Compute gammaTheta values
-    for iteration in iterations:
+    # Compute throughput values
+    for gamma in iterations:
         if(Rounding):
-            res = rd.OneRoundingIter(N, d, M, iteration)
+            res = rd.OneRoundingIter(N, d, M, gamma)
         else:
-            res = fd.OneFloorIter(N, d, M , iteration)
-        # print("iter: ", iteration, "|res: ", res)
+            res = fd.OneFloorIter(N, d, M , gamma)
+        # print("iter: ", gamma, "|res: ", res)
         if(res > maxTheta):
             maxTheta = res
         if(res == 1):
             return maxTheta
     return maxTheta
 
-def addGraphToMatrix(G, C):
+def addGraphToMatrix(G, C): #Increments Matrix for edges of a RRG
     for i, j in G.edges:
         C[i, j] += 1
         C[j, i] += 1
-def match_and_increment(list_a, list_b, C):
+def match_and_increment(list_a, list_b, C): #Graph Configuration Model
     
     
     N = len(list_a)
@@ -113,18 +115,14 @@ def match_and_increment(list_a, list_b, C):
 
         valid_b_indices = [i for i in range(N) if list_b[i] > 0 and i != a_index]
         if not valid_b_indices:
-            # print("No valid index left in list_b to decrement with")
             break
         b_index = random.choice(valid_b_indices)
-        # Decrement both values at the selected indices
+        # Decrement both link capacities at the selected indices
         list_a[a_index] -= 1
         list_b[b_index] -= 1
         
-        C[a_index, b_index] +=1
-        # Print for debugging purposes (optional)
-    #     print(f"Decrementing A[{a_index}] and B[{b_index}]")
-    #     print(f"List A: {list_a}")
-    #     print(f"List B: {list_b}\n")
+        C[a_index, b_index] +=1 #Increase capacity for constructed link
+
 
 import random
 def filtering(M, eps=1e-5):
@@ -224,89 +222,20 @@ def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given
     return throughput.X
 
 
-def findavgRRGtheta(M, N, d, iter):
+def findavgRRGtheta(M, N, d, iter):#Find average throughput RRGs achieve over iter iterations
     thetas = []
     # SH = []
     for i in range(iter):
         G_temp = nx.random_regular_graph(d,N)
         theta = thetaEdgeFormulation(G_temp, M, N, measure_SH=False)
         thetas.append(theta)
-        # SH.append(routed[1] / routed[0])
     return np.mean(thetas)
 def createRingGraph(N, d):
-    RingG= nx.MultiDiGraph()#d-Strong Circle
+    RingG= nx.MultiDiGraph()#d-Strong Ring
     for i in range(N):
         j = (i+1) % N
         for k in range(d): 
             RingG.add_edge(i,j)
     return RingG
 if __name__ == "__main__":
-    
-    N=8
-    dE=1
-    G = createRingGraph(N, dE)
-
-
-
-
     workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
-    demand = np.loadtxt(workdir+"skew-8-0.5.mat", usecols=range(N))
-    demand2 = np.zeros((8,8))
-    for i in range(8):
-        for j in range(8):
-            if(i == (j+1)% N):
-                demand2[i,j] = 1
-
-    print(np.array2string(demand2))
-    # filtering(demand)
-    # demand = mm.Sinkhorn_Knopp(demand)
-    demand = demand2 *dE
-    # print(findavgRRGtheta(demand, N, dE, 6))
-    print(thetaEdgeFormulation(G, demand, 8, measure_SH=True))
-    # demand = np.zeros((N,N))
-    # for i in range(N):
-    #     for j in range(N):
-    #         if i!=j:
-    #             demand[i][j] = d/(N-1)
-
-    # theta(G, demand, N, d)
-    # res = thetaEdgeFormulation(G, demand, N, measure_SH= True)[1]
-    # print(res)
-    # print(res[1] / res[0])
-
- 
-    # print(thetaEdgeFormulation(createPseudoChord(N, dE), demand, N))
-    # print(thetaEdgeFormulation(createCircleGraph(N, dE), demand, N))
-
-
-
-    # degOut = [2, 2, 2, 2, 3, 3, 3, 3, 4, 2, 3, 3, 3, 3, 3, 4]
-    # degIn = [2, 3, 3, 3, 3, 3, 4, 2, 2, 2, 2, 3, 3, 3, 3, 4]
-    # d = 3
-    # degOut = [d] * 16
-    # degIn = [d] * 16
-    # graph = nx.directed_configuration_model(degIn, degOut)
-    # # graph = nx.random_regular_expander_graph(N, dE, max_tries= 10000 )
-
-    # nx.draw_circular(graph, with_labels= True)
-    # plt.show()
-
-    # graph2 = nx.random_regular_graph(d, 16)
-    # nx.draw_circular(graph2, with_labels= True)
-    # plt.show()
-    # match_and_decrement(degOut, degIn)
-
-    # theta(G2, demand, N, d)G2= nx.MultiDiGraph() #d-Strong Circle
-    # G2.add_nodes_from(range(N))
-    # for i in range(N):
-    #     j = (i+1) % N
-    #     for k in range(d):
-    #         keys = G2.add_edge(i,j)
-    # thetaEdgeFormulation(G2, demand, N)
-    # nx.draw_circular(G2, with_labels= True)
-    # plt.show()
-    # # theta(G3, demand, N, d)
-    # thetaEdgeFormulation(G3, demand, N)
-    # nx.draw_circular(G3, with_labels= True)
-    # plt.show()
-
