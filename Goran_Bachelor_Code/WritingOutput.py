@@ -32,7 +32,7 @@ def generate_synthmatrix_names(N):
     for j in range(9):
         res[j+4] += str(N) + "-0." + str(j+1)
     return res
-organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
+organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"] #Names of the DNN workloads
 matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
 outputdir = "/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
 n_values_used = [8,16]
@@ -65,31 +65,31 @@ def oneIteration(N, M, matrix, outputfile):
         print(Rounding_String)
         outputfile.write( Rounding_String+"\n")
 
-        # circle_theta, routed = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N)
+        # circle_theta = fct.thetaEdgeFormulation(fct.createRingGraph(N,d),saturatedM, N)
         # circleString = string_Beginning + " Circle " +  +str(circle_theta)
         # print(circleString)
         # outputfile.write( circleString+"\n")
 
 
-# def writePerfectTheta(N, matrices, d_lists):
-#     for i in range(len(matrices)):
-#         matrix = matrices[i]
-#         demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
-#         fct.filtering(demandMatrix)
-#         demandMatrix = fct.return_normalized_matrix(demandMatrix)
-#         demandMatrix = mm.Sinkhorn_Knopp(demandMatrix) #Currently IN
-#         # print(demandMatrix.sum(axis=0))
-#         if(matrix) in organicmatrices16:
-#             matrix = "Sinkhorn_" + matrix
-#         for d in d_lists[i]:
-#             saturatedM = demandMatrix * d
-#             string_Beginning = str(N) +" "+matrix +" " + str(d)
+def writePerfectTheta(N, matrices, d_lists):#For a given list of matrices and corresponding lists of values for d, print Optimal throughput and SH share
+    for i in range(len(matrices)):
+        matrix = matrices[i]
+        demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
+        fct.filtering(demandMatrix)
+        demandMatrix = fct.return_normalized_matrix(demandMatrix)
+        demandMatrix = mm.Sinkhorn_Knopp(demandMatrix) #Currently IN
+        # print(demandMatrix.sum(axis=0))
+        if(matrix) in organicmatrices16:
+            matrix = "Sinkhorn_" + matrix
+        for d in d_lists[i]:
+            saturatedM = demandMatrix * d
+            string_Beginning = str(N) +" "+matrix +" " + str(d)
 
-#             res= ev.perfect_theta(N,d,saturatedM, measure_SH=True)
-#             perfect_theta = res[0]
-#             SH_Share = res[1][1] / res[1][0]
-#             perfect_string = string_Beginning + " Optimal " + str(SH_Share) + " " + str(perfect_theta)
-#             print(perfect_string)
+            res= ev.perfect_theta(N,d,saturatedM, measure_SH=True)
+            perfect_theta = res[0]
+            SH_Share = res[1][1] / res[1][0]
+            perfect_string = string_Beginning + " Optimal " + str(SH_Share) + " " + str(perfect_theta)
+            print(perfect_string)
 
 if __name__ == "__main__":
     # all_ds = [4,6,8,10,12,14]
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
 
     print("N matrix d Alg throughput\n")
-    outputfile = open(outputdir+"FinalRounding", "w")
+    outputfile = open(outputdir+"TestOutput", "w")
     outputfile.write("N matrix d Alg throughput\n")
     # writePerfectTheta(16,matrices, d_lists)
     for N in n_values_used:
