@@ -1,4 +1,3 @@
-#In this file I attempt to generate random matrices that are pretty skewed
 import numpy as np
 def generate_doubly_stochastic_matrix(N, min_val=1e-3, max_val=0.9,alpha =0.1, beta=10.0, max_iters=10000, tol=1e-12):#Used to generate the random-skewed matrices (Figure 5)
     # Step 1: Initialize random matrix with beta distribution

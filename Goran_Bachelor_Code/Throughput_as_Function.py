@@ -12,7 +12,11 @@ import pandas as pd
 
 directory="/home/studium/Documents/Code/rdcn-throughput/Goran_Bachelor_Code/"
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1","heatmap2","heatmap3", "topoopt"]
-def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration; used as an auxiliary for plotGamma
+def prepareOrganicMatrix(M):
+    filtering(M)
+    return mm.Sinkhorn_Knopp(M)
+
+def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration; used as an auxiliary function for plotGamma
     if(matrix in organicmatrices16):
         matrix = "Sinkhorn_" + matrix
     print(N, d, matrix, Alg)
@@ -32,7 +36,7 @@ def findThroughput(N,d,matrix,Alg):#Returns throughput for a given configuration
         return float(throughput)
     else:
         print('No matching data found.')
-def plotGamma(N, d, M, matrix, Rounding = False): #Used for Figure 10
+def plotGamma(N, d, M, matrix, Rounding = False): #Used for Figure 10; Plots throughput evolution over values of gamma for Rounding or Floor
     # Generate iterations list
     iterations = [1 - i * 0.01 for i in range(99)]
     gammaTheta = []
@@ -47,7 +51,7 @@ def plotGamma(N, d, M, matrix, Rounding = False): #Used for Figure 10
         if(res > best_theta):
             best_theta = res
             best_iter = gamma
-        print("iter: ", gamma, "|res: ", res)
+        print("gamma: ", gamma, "|res: ", res)
         gammaTheta.append(res)
     
     
@@ -64,23 +68,23 @@ def plotGamma(N, d, M, matrix, Rounding = False): #Used for Figure 10
     # Reverse the x-axis
     plt.gca().invert_xaxis()
     
+    #Add Optimal and RRG dashed lines
     plt.axhline(y=findThroughput(N,d,matrix, "Optimal"), color='green', linestyle='--', linewidth=1, label='Optimal Throughput')
     plt.axhline(y=findThroughput(N,d,matrix, "RRG"), color='red', linestyle='--', linewidth=1, label='RRG Avg Throughput')
+
     # Add labels and title
     plt.xlabel('Gamma', fontsize=20)
     plt.ylabel('Throughput',fontsize=20)
-    plt.tick_params(axis='both', labelsize=16)  # Increase both x and y tick size
+    plt.tick_params(axis='both', labelsize=16) 
     plt.ylim(0,1.05)
-    # plt.title('GammaTheta vs Iterations')
-    plt.grid(True)  # Optional: Add grid lines
-    plt.legend(fontsize=20)  # Optional: Add a legend
+    plt.grid(True) 
+    plt.legend(fontsize=20)
     if(Rounding):
         plt.savefig(f"RTE"+matrix+str(d)+".svg", format="svg", dpi=300)
     else:
         plt.savefig(f"FTE"+matrix+str(d)+".svg", format="svg", dpi=300)
-    # Show the plot
     plt.show()
-def findBestGamma(N, d, M, Rounding = False):
+def findBestGamma(N, d, M, Rounding = False): #Return theta star for best gamma; Equivalent to the FindThroughput function
     # Generate iterations list
     iterations = [1 - i * 0.01 for i in range(99)]
     maxTheta = 0
@@ -101,7 +105,7 @@ def addGraphToMatrix(G, C): #Increments Matrix for edges of a RRG
     for i, j in G.edges:
         C[i, j] += 1
         C[j, i] += 1
-def match_and_increment(list_a, list_b, C): #Graph Configuration Model
+def match_and_increment(list_a, list_b, C): #Graph Configuration Model; list_a is outgoing links left and list_b incoming links left
     
     
     N = len(list_a)
@@ -135,7 +139,7 @@ def return_normalized_matrix(M): #Normalizes a matrix by dividing it by the scal
     M = np.divide(M, max_sum)
     return M
 
-def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given static topology G and demand matrix M, returns best throughput achievable
+def thetaEdgeFormulation(G, M, N, input_graph = True, measure_SH = False):#Given topology G and demand matrix M, returns throughput with optimal routing
     model = gp.Model()
     capacity = {}
     model.Params.LogToConsole = 0

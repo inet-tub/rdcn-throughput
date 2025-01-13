@@ -1,7 +1,5 @@
 import numpy as np
 import Throughput_as_Function as fct
-import Floor_Draft as fd
-import Rounding_Draft as rd
 import EVariable as ev
 import matrixModification as mm
 
@@ -35,8 +33,7 @@ n_values_used = [8,16]
 d_s = [2,3,4,5,6,7]
 def oneIteration(N, M, matrix, outputfile):
     if(matrix in organicmatrices16):
-        fct.filtering(M)
-        M = mm.Sinkhorn_Knopp(M)
+        demandMatrix = fct.prepareOrganicMatrix(demandMatrix)
         matrix = "Sinkhorn_" + matrix
     for d in d_s:
         d = round(d*(N/8))
@@ -71,11 +68,9 @@ def writePerfectTheta(N, matrices, d_lists):#For a given list of matrices and co
     for i in range(len(matrices)):
         matrix = matrices[i]
         demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
-        fct.filtering(demandMatrix)
         demandMatrix = fct.return_normalized_matrix(demandMatrix)
-        demandMatrix = mm.Sinkhorn_Knopp(demandMatrix) #Currently IN
-        # print(demandMatrix.sum(axis=0))
         if(matrix) in organicmatrices16:
+            demandMatrix = fct.prepareOrganicMatrix(demandMatrix)
             matrix = "Sinkhorn_" + matrix
         for d in d_lists[i]:
             saturatedM = demandMatrix * d
@@ -106,6 +101,5 @@ if __name__ == "__main__":
             matrices = organicmatrices16 + matrices
         for matrix in matrices:
             demandMatrix = np.loadtxt(matrixdir+matrix+".mat", usecols=range(N))
-            fct.filtering(demandMatrix)
             demandMatrix = fct.return_normalized_matrix(demandMatrix)
             oneIteration(N, demandMatrix, matrix, outputfile)
