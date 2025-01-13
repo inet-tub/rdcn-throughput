@@ -1,8 +1,6 @@
 import gurobipy as gp
 from gurobipy import GRB
-import numpy as np
-import matplotlib as mpl
-mpl.use('TkAgg')  
+import numpy as np 
 from gurobipy import Model, GRB
 import matrixModification as mm
 import Throughput_as_Function as fct
@@ -66,9 +64,6 @@ def perfect_theta(N, d, M, measure_SH = False):#MIP that returns Optimal through
 
     
     model.optimize()
-    # for v in model.getVars():
-    #     if(v.x != 0):
-    #         print(v.varName, "=", v.x)
     
     total_flow =0
     SH_flow = 0
@@ -88,7 +83,6 @@ def perfect_theta(N, d, M, measure_SH = False):#MIP that returns Optimal through
 if(__name__ == "__main__"):
     matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
     demandMatrix = np.loadtxt(matrixdir+"skew-16-0.5"+".mat", usecols=range(16))
-    fct.filtering(demandMatrix)
-    demandMatrix = mm.Sinkhorn_Knopp(demandMatrix)
+    demandMatrix = fct.prepareOrganicMatrix(demandMatrix)
     demandMatrix = demandMatrix *14
     print(perfect_theta(16, 14, demandMatrix))
