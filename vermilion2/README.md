@@ -33,7 +33,7 @@ chmod +x ./run.sh
 - Aggregate the results to a single file
 
 ```bash
-for i in {0..9}; do cat sigmetrics-throughput-results-16-$i.csv >> sigmetrics-throughput-results-16.csv; done
+for i in {0..9}; do cat results/sigmetrics-throughput-results-16-$i.csv >> results/sigmetrics-throughput-results-16.csv; done
 ```
 
 - Plot the results 

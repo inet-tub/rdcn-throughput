@@ -165,7 +165,7 @@ if __name__ == "__main__":
     
     N = 16
     noise = int(sys.argv[1])
-    with open("sigmetrics-throughput-results-"+str(N)+"-"+str(noise)+".csv", "w") as outputfile:
+    with open("results/sigmetrics-throughput-results-"+str(N)+"-"+str(noise)+".csv", "w") as outputfile:
         # print("matrix", "alg", "k", "N", "dE", "noise", "multadd", "throughput", file=outputfile)
 
         matrices=generate_synthmatrix_names(N)
