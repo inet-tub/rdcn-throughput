@@ -24,7 +24,7 @@ def generate_synthmatrix_names(N):
         res[j+3] += str(N) + "-0." + str(2*(j+1))
     return res
 organicmatrices16 = ["data-parallelism","hybrid-parallelism","heatmap1"]
-workdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+workdir="/home/vamsi/rdcn-throughput/matrices/"
 #%%
 def trim_floats(val, tolerance=1e-9):
     if abs(val - round(val)) < tolerance:
@@ -164,9 +164,10 @@ if __name__ == "__main__":
     noise_values = np.linspace(0, dE/3,10)
     
     N = 16
-    noise = 2
-
+    noise = int(sys.argv[1])
     with open("sigmetrics-throughput-results-"+str(N)+"-"+str(noise)+".csv", "w") as outputfile:
+        # print("matrix", "alg", "k", "N", "dE", "noise", "multadd", "throughput", file=outputfile)
+
         matrices=generate_synthmatrix_names(N)
         
         if N==16:

@@ -59,7 +59,7 @@ def add_additive_noise(M, N, delta):
 
 if __name__ == "__main__":
     N = 16
-    matrixdir="/home/studium/Documents/Code/rdcn-throughput/matrices/"
+    matrixdir="./matrices/"
     M = demandMatrix = np.loadtxt(matrixdir+"topoopt"+".mat", usecols=range(N))
 
 
