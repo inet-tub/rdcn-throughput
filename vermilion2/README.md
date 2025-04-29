@@ -16,6 +16,8 @@ The code is organized as follows:
 
 # Reproducing the Results
 
+The code is written in python 3.11.11 and tested on Linux Fedora 41.
+
 - install dependencies
 
 ```bash
